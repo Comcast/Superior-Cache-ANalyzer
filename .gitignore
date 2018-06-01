@@ -1,30 +1,14 @@
-#ignore compiled python files
-__pycache__
-*.pyo
-*.pyc
-build/
-dist/
-*.egg-info
+#latex intermediary files
+*.aux
+*.cls
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xdv
 
-#ignore my dumb math files
-math.*
-
-#ignore c/c++ test files
-test.c*
-test
-test.exe
-test.out
-test.dat
-
-#ignore test databases
-*.db
-
-#sublime text files
-*.sublime-*
-
-#vim swapfiles
-*.swp
-
-#test configs
-*.config
+#Ignore dynamic api files
+docs/api
 
