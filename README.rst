@@ -1,6 +1,8 @@
 SCAN
 ====
 
+|License|
+
 Superior Cache ANalyzer
 
 User Guide
@@ -336,3 +338,6 @@ exception: indentation is *always done via the tab character, **never
 with spaces***. This was done because without harming its human
 readability, it allows for much easier pipelining of output e.g. via
 ``cut``.
+
+.. |License| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+   :target: https://opensource.org/licenses/Apache-2.0
