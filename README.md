@@ -27,9 +27,11 @@ pip install Superior-Cache-ANalyzer
 
 ##### From a Release
 >On the [Releases page](https://github.com/Comcast/Superior-Cache-ANalyzer/releases) you can download a `.rpm` file to install manually with `sudo yum install -y /path/to/python3-Superior-Cache-ANalyzer.<version stuff>.rpm` (on Fedora/Red Hat Enterprise Linux/CentOS systems). If you're using a non-RedHat/CentOS/Fedora distro, then you can download the wheel (the `.whl` file) and install that manually with
+
 ```bash
 sudo -H python3 -m pip install -y /path/to/Superior-Cache-ANalyzer.<version stuff>.whl
 ```
+
 >Note that this may require you to upgrade/install the `pip` module, so if you get an error like `No module named 'pip'` try installing the `python3-pip` package (`python34-pip` on RedHat/CentOS/Fedora) or running `sudo -H python3 -m ensurepip`. Other errors could possibly be fixed by running `sudo -H python3 -m pip install -yU pip` and then trying the install again. If all else fails, then you can probably install from source.
 
 ##### From Source
