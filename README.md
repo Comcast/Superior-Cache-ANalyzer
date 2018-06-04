@@ -28,7 +28,7 @@ pip install Superior-Cache-ANalyzer
 >Note that you'll probably need to run that command as an administrator (Windows), with `sudo` (Everything Else), or with the `--user` option (Everything Including Windows)
 
 ##### From a Release
->On the [Releases page](https://github.com/Comcast/Superior-Cache-ANalyzer/releases) you can download a `.rpm` file to install manually with `sudo yum install -y /path/to/python3-Superior-Cache-ANalyzer.<version stuff>.rpm` (on Fedora/Red Hat Enterprise Linux/CentOS systems). If you're using a non-RedHat/CentOS/Fedora distro, then you can download the wheel (the `.whl` file) and install that manually with
+>On the [Releases page](https://github.com/Comcast/Superior-Cache-ANalyzer/releases) you can download the wheel (the `.whl` file) and install that manually with
 
 ```bash
 sudo -H python3 -m pip install -y /path/to/Superior-Cache-ANalyzer.<version stuff>.whl

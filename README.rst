@@ -65,11 +65,8 @@ From a Release
 
     On the `Releases
     page <https://github.com/Comcast/Superior-Cache-ANalyzer/releases>`__
-    you can download a ``.rpm`` file to install manually with
-    ``sudo yum install -y /path/to/python3-Superior-Cache-ANalyzer.<version stuff>.rpm``
-    (on Fedora/Red Hat Enterprise Linux/CentOS systems). If you're using
-    a non-RedHat/CentOS/Fedora distro, then you can download the wheel
-    (the ``.whl`` file) and install that manually with
+    you can download the wheel (the ``.whl`` file) and install that
+    manually with
 
 .. code:: bash
 
