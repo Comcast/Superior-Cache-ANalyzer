@@ -47,13 +47,21 @@ def setCompleter(words: typing.Set[str]):
 	Sets tab completion to operate on the passed set `words`
 	"""
 
+	matches = []
+
 	def complete(text: str, state: int) -> str:
 		"""
 		Gets the `state`th completion for `text`
 		"""
-		nonlocal words
+		nonlocal matches, words
 
-		return [word for word in words if word.startswith(text)][state]
+		if state == 0:
+			if text:
+				matches = [word for word in words if word.startswith(text)]
+			else:
+				matches = [word for word in words]
+
+		return matches[state]
 
 	readline.set_completer_delims(' \t\n;')
 	readline.parse_and_bind("tab: complete")
