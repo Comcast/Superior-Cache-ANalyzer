@@ -73,21 +73,10 @@ def setGlobCompleter():
 	Sets tab completion to operate on the filesystem
 	"""
 
-	matches = []
-
-	def complete(text: str, state: int) -> str:
-		"""
-		Gets the `state`th completion for a filesystem path `text`
-		"""
-		nonlocal matches
-		if state == 0:
-			if text:
-				matches = glob.glob(text+"*" if not text.endswith("*") else text)
-			else:
-				matches = []
-		return matches[state] if matches else None
+	complete = lambda t,s: [x for x in glob.glob(t+"*")][s] if t else None
 
 	readline.set_completer(complete)
+	readline.set_completer_delims(' \t\n;')
 	readline.parse_and_bind("tab: complete")
 
 
