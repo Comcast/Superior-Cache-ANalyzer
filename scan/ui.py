@@ -87,6 +87,9 @@ def setGlobCompleter():
 				matches = []
 		return matches[state] if matches else None
 
+	readline.set_completer(complete)
+	readline.parse_and_bind("tab: complete")
+
 
 def getConfig():
 	"""
