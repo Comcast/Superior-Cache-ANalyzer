@@ -262,6 +262,13 @@ def readStorageConfig() -> int:
 	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
 
 	for cache in lines:
+		if not cache.startswith('/'):
+			try:
+				_ = PATH.index('etc')
+			except ValueError:
+				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
+				                                      (PATH+'storage.config', cache))
+			cache = PATH.split('etc')[0]+cache
 		STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(cache)), span.Span(cache))
 
 	return len(lines)
