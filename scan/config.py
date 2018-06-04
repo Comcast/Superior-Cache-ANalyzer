@@ -270,11 +270,11 @@ def readStorageConfig() -> int:
 				                                      (PATH+'storage.config', cache))
 			cache = PATH.split('etc')[0]+cache
 
-		try:
-			STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(cache)), span.Span(cache))
-		except IsADirectoryError:
-			STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(os.path.join(cache, 'cache.db')),
-			                                                        span.Span(cache)))
+		cache = os.path.abspath(cache)
+		if os.path.isdir(cache):
+			cache = os.path.join(cache, 'cache.db')
+
+		STORAGE_CONFIG[cache] = (utils.fileSize(cache), span.Span(cache))
 
 	return len(lines)
 
