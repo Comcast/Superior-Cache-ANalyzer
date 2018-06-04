@@ -269,7 +269,12 @@ def readStorageConfig() -> int:
 				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
 				                                      (PATH+'storage.config', cache))
 			cache = PATH.split('etc')[0]+cache
-		STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(cache)), span.Span(cache))
+
+		try:
+			STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(cache)), span.Span(cache))
+		except IsADirectoryError:
+			STORAGE_CONFIG[cache] = (utils.fileSize(os.path.abspath(os.path.join(cache, 'cache.db')),
+			                                                        span.Span(cache)))
 
 	return len(lines)
 
