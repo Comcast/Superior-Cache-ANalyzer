@@ -171,8 +171,9 @@ Once the utility is started (provided the ``-d`` or ``--dump`` flag is
 not given) you'll be faced with a pretty basic prompt. At first, your
 only option will be ``[1] Read Storage Config``. After you select this
 option, you'll be prompted to enter the location of your ATS
-configuration files. SCAN will expect all of them to be in the same
-directory, and will guess that they are in
+configuration files. "Tab-completion" is supported for most interactive
+prompts, including the ATS configuration file prompt. SCAN will expect
+all of them to be in the same directory, and will guess that they are in
 ``/opt/trafficserver/etc/trafficserver/`` by default. **Note that the
 use of FIPS at compilation time cannot be determined from the config
 files, and MUST be given on the command line.** Once the configuration

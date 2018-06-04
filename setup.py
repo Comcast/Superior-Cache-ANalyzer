@@ -27,7 +27,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 
 setup(
 	name="Superior-Cache-ANalyzer",
-	version='2.2.2',
+	version='2.2.3',
 	description='An analysis tool for Apache Traffic Server caches.',
 	long_description=long_description,
 	url='https://github.com/comcast/Superior-Cache-ANalyzer',
