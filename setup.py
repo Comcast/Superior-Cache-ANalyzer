@@ -20,6 +20,7 @@ Setup script for S.C.AN.
 
 import os
 from setuptools import setup, find_packages
+from scan import __version__ as scanv
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as f:
@@ -27,7 +28,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 
 setup(
 	name="Superior-Cache-ANalyzer",
-	version='2.2.3',
+	version=scanv,
 	description='An analysis tool for Apache Traffic Server caches.',
 	long_description=long_description,
 	url='https://github.com/comcast/Superior-Cache-ANalyzer',

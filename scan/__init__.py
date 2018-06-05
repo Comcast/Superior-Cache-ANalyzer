@@ -18,7 +18,7 @@ Analyzes Apache Traffic Server on-disk caches
 """
 import sys
 
-__version__ = "2.2.3"
+__version__ = "2.2.4"
 
 __author__ = "Brennan W. Fieck"
 
@@ -105,8 +105,10 @@ def main() -> int:
 		try:
 			p = psutil.Process(os.getpid())
 			p.ionice(psutil.IOPRIO_CLASS_IDLE)
-		except OSError as e:
-			# Only supported on Linux kernel v > 2.16.3+ and Windows > Vista
+		except ValueError:
+			p.ionice(0) # Windows > Vista
+		except (OSError, AttributeError) as e:
+			# either not Linux kernel v > 2.16.3+ or we're on BSD/OSX
 			print("WARNING: ionice not supported on your system. May cause heavy I/O load!",
 			      file=sys.stderr)
 			print("(Info: %s)" % e, file=sys.stderr)
