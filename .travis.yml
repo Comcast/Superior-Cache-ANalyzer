@@ -4,8 +4,6 @@ python:
   - "3.5"
   - "3.6"
   - "3.7-dev"
-  - "pypy3.5"
-  - "pypy3.6"
 
 # sets up pylint
 before_install: python3 -m pip install pylint
