@@ -50,9 +50,9 @@ def testSpanBlockHeader(sbh: stripe.SpanBlockHeader = None) -> typing.List[str]:
 	if not sbh:
 		sbh = stripe.SpanBlockHeader(rawSpanBlockHeader)
 
-	if sbh.sizeof() != struct.calcsize("4IiII"):
+	if sbh.sizeof != struct.calcsize("4IiII"):
 		results.append("sizeof returns %d, should be %d!" %\
-		                                   (sbh.sizeof(), struct.calcsize("4IiII")))
+		                                   (sbh.sizeof, struct.calcsize("4IiII")))
 
 	if not sbh:
 		results.append("reported it was unused, should have been used.")
@@ -97,8 +97,8 @@ def testDirEntry(dirent: directory.DirEntry = None) -> typing.List[str]:
 	if len(dirent) != 0x200:
 		results.append("bad size, expected 512, got '%d" % len(dirent))
 
-	if dirent.sizeof() != 10:
-		results.append("sizeof gave wrong size, expected 10, got '%d'" % dirent.sizeof())
+	if dirent.sizeof != 10:
+		results.append("sizeof gave wrong size, expected 10, got '%d'" % dirent.sizeof)
 
 	if dirent.next != 0:
 		results.append("bad next value, expected 0 got '%d'" % dirent.next)
@@ -140,9 +140,11 @@ def testStripe() -> typing.List[str]:
 
 	return ["(Stripe): %s" % r for r in results]
 
-def main():
+def main() -> int:
 	"""
-	Runs the tests and prints the failed tests to stdout followed by a count of passed/failed tests
+	Runs the tests and prints the failed tests to stdout followed by a count of passed/failed tests.
+
+	Returns the number of failed tests.
 	"""
 	results = testSpanBlockHeader()
 	results += testDirEntry()
@@ -153,5 +155,9 @@ def main():
 
 	print("Failed %d tests." % len(results))
 
+	return len(results)
+
 if __name__ == '__main__':
-	main()
+	# Once tests are stable, will exit with `main`'s return value.
+	_ = main()
+	exit(0)

@@ -1,0 +1,23 @@
+%YAML 1.1
+---------
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7-dev"
+  - "pypy3.5"
+  - "pypy3.6"
+
+os:
+  - linux
+  - osx
+
+# sets up pylint
+before_install: python3 -m pip install pylint
+
+# Install step (should handle dependencies)
+install: python -m pip install .
+
+# Build step (Checks pylint score as well)
+script: test.sh
