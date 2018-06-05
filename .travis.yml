@@ -7,10 +7,6 @@ python:
   - "pypy3.5"
   - "pypy3.6"
 
-os:
-  - linux
-  - osx
-
 # sets up pylint
 before_install: python3 -m pip install pylint
 
