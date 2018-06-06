@@ -14,6 +14,7 @@ addons:
       - git
       - autoconf
       - automake
+      - software-properties-common
       - pkg-config
       - libtool
       - make
@@ -27,7 +28,7 @@ addons:
       - curl
 
 # sets up pylint
-before_install: sudo add-apt-repository -y ppa:jonathonf/gcc-7.1 && sudo apt-get update && sudo apt-get install -y gcc-7 g++-7 && python -m pip install -y pylint
+before_install: 'sudo printf "Package: gcc-7\nPin: release n=trusty\nPin-Priority: 990\n" >> /etc/apt/preferences && sudo add-apt-repository -y ppa:jonathonf/gcc-7.1 && sudo apt-get update && sudo apt-get install -y gcc-7 g++-7 && python -m pip install -y pylint'
 
 # Install step (should handle dependencies)
 install: python -m pip install .
