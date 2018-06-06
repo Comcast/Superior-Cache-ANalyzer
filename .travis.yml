@@ -4,26 +4,28 @@ python:
   - "3.5"
   - "3.6"
 
+sudo: required
+
 addons:
   apt:
     sources:
-      sourceline: ppa:jonathonf/gcc-7.1
+      sourceline: ppa:ubuntu-toolchain-r/test
     packages:
       - git
       - autoconf
       - automake
-      - pkgconfig
+      - pkg-config
       - libtool
       - gcc-7
       - g++-7
       - make
       - tcl
-      - pcre
-      - libcap
+      - libpcre3-dev
+      - libcap-dev
       - flex
       - hwloc
-      - lua
-      - curses
+      - lua5.2
+      - libncurses-dev
       - curl
 
 # sets up pylint

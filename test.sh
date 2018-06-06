@@ -19,6 +19,7 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 
 	git clone https://github.com/apache/trafficserver.git ats_test
 	pushd >/dev/null ats_test
+	git checkout 7.1.x
 
 	autoreconf -if || { echo "'autoreconf' has failed." >&2; exit 2; }
 
