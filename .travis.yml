@@ -4,8 +4,30 @@ python:
   - "3.5"
   - "3.6"
 
+addons:
+  apt:
+    sources:
+      sourceline: ppa:jonathonf/gcc-7.1
+    packages:
+      - git
+      - autoconf
+      - automake
+      - pkgconfig
+      - libtool
+      - gcc-7
+      - g++-7
+      - make
+      - tcl
+      - pcre
+      - libcap
+      - flex
+      - hwloc
+      - lua
+      - curses
+      - curl
+
 # sets up pylint
-before_install: python3 -m pip install pylint
+before_install: python -m pip install pylint
 
 # Install step (should handle dependencies)
 install: python -m pip install .

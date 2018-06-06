@@ -20,33 +20,15 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 	git clone https://github.com/apache/trafficserver.git ats_test
 	pushd >/dev/null ats_test
 
-	if autoreconf -if ; then
-		#Nothing
-	else
-		echo "'autoreconf' has failed." >&2
-		exit 2
-	fi
+	autoreconf -if || { echo "'autoreconf' has failed." >&2; exit 2; }
 
 	mkdir goal
 
-	if ./configure --prefix "$(pwd)/goal"; then
-		#Nothing
-	else
-		echo "'./configure' has failed." >&2
-		exit 2
-	fi
+	./configure --prefix "$(pwd)/goal" || { echo "'./configure' has failed." >&2; exit 2; }
 
-	if make -j; then
-		#Nothing
-	else
-		echo "'make' has failed." >&2
-	fi
+	make -j || { echo "'make' has failed." >&2; exit 2; }
 
-	if make install; then
-		#Nothing
-	else
-		echo "'make install' has failed." >&2
-	fi
+	make install || { echo "'make install' has failed." >&2; exit 2; }
 
 	for i in $(ls -A); do
 		case $i in
@@ -63,12 +45,7 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 	cp "../tests/scan.test.py" "tests/gold_tests/scan/"
 	cp "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
 
-	if tests/autest.sh -f scan; then
-		#Nothing
-	else
-		echo "Autests failed..." >&2
-		exit 2
-	fi
+	tests/autest.sh -f scan || { echo "Autests failed..." >&2; exit 2; }
 
 else
 	echo "Cannot run autests, need git, make, autoconf and a C compiler (and ATS dependencies)" >&2
