@@ -46,11 +46,14 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 	cp "../tests/scan.test.py" "tests/gold_tests/scan/"
 	cp "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
 
-	tests/autest.sh --ats-bin goal/bin --show-color -f scan || { echo "Autests failed..." >&2; exit 2; }
+	tests/autest.sh --ats-bin ../goal/bin --show-color -f scan || { echo "Autests failed..." >&2; exit 2; }
+
+	popd >/dev/null
 
 else
 	echo "Cannot run autests, need git, make, autoconf and a C compiler (and ATS dependencies)" >&2
 fi
+
 
 # tests/test.py
 
