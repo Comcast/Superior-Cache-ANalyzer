@@ -26,7 +26,7 @@ addons:
       - curl
 
 # sets up pylint
-before_install: 'wget http://ftp.ports.debian.org/debian-ports//pool-x32/main/g/gcc-defaults/gcc_7.3.0-3_x32.deb && sudo dpkg -i ./*.deb && python -m pip install -y pylint'
+before_install: 'sudo apt-add-repository -y "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main" && sudo apt-get update && sudo apt-get install -y clang-4.0 lldb-4.0 && python -m pip install -y pylint'
 
 # Install step (should handle dependencies)
 install: python -m pip install .
