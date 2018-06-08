@@ -430,5 +430,5 @@ Bucket = typing.NewType('Bucket', typing.Tuple[DirEntry, DirEntry, DirEntry, Dir
 Segment = typing.NewType('Segment', typing.Dict[int, Bucket])
 
 utils.log("'directory' module: Loaded")
-utils.log("\tDirEntry size:", DirEntry.sizeof)
-utils.log("\tDoc size:", Doc.sizeof)
+utils.log("\t\tDirEntry size:", DirEntry.sizeof)
+utils.log("\t\tDoc size:", Doc.sizeof)

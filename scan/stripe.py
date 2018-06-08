@@ -818,5 +818,5 @@ def SORdirSize(start: int, length: int) -> typing.Tuple[int, int, int]:
 	return singleStep(*singleStep(*singleStep(0, 0, start)))
 
 utils.log("'stripe' module: Loaded")
-utils.log("\tSpan Block Header size:", SpanBlockHeader.sizeof)
-utils.log("\tStripe (metadata) size:", Stripe.sizeof)
+utils.log("\t\tSpan Block Header size:", SpanBlockHeader.sizeof)
+utils.log("\t\tStripe (metadata) size:", Stripe.sizeof)

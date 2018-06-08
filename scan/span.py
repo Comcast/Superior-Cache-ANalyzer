@@ -182,4 +182,4 @@ class DiskHeader():
 	# 	return struct.calcsize(cls.BASIC_FORMAT)
 
 utils.log("'span' module: Loaded")
-utils.log("\tDiskHeader size:", DiskHeader.sizeof)
+utils.log("\t\tDiskHeader size:", DiskHeader.sizeof)

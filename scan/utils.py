@@ -150,8 +150,8 @@ if __debug__:
 		sys.stderr.write(messageTemplate % (' '.join(output),))
 
 	log("'utils' module: Loaded")
-	log("\tUNSIGNED_LONG_LONG_SIZE:", UNSIGNED_LONG_LONG_SIZE)
-	log("\tPOINTER_SIZE:", POINTER_SIZE)
+	log("\t\tUNSIGNED_LONG_LONG_SIZE:", UNSIGNED_LONG_LONG_SIZE)
+	log("\t\tPOINTER_SIZE:", POINTER_SIZE)
 else:
 	def log(*unused_args):
 		"""
