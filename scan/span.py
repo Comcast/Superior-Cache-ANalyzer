@@ -20,7 +20,7 @@ import struct
 import sys
 import typing
 import asyncio
-from . import stripe
+from . import stripe, utils
 
 class Span():
 	"""
@@ -32,6 +32,7 @@ class Span():
 		Initializes the span, along with its header, and headers for any and
 		all of its span blocks
 		"""
+		utils.log("Span: initializing from", file)
 		self.file = file
 		self.blocks = []
 		with open(file, 'rb') as spanFile:
@@ -39,8 +40,11 @@ class Span():
 			spanFile.seek(DiskHeader.OFFSET)
 
 			try:
-				self.header = DiskHeader(spanFile.read(DiskHeader.sizeof()))
+				self.header = DiskHeader(spanFile.read(DiskHeader.sizeof))
 			except ValueError:
+				if __debug__:
+					from traceback import print_exc
+					print_exc(file=sys.stderr)
 				raise ValueError("%s does not appear to be a valid ATS cache!" % file)
 
 			for spanblockNum in range(self.header.diskvolBlocks):
@@ -48,6 +52,9 @@ class Span():
 				try:
 					spanblock = stripe.Stripe(spanblock, file)
 				except ValueError:
+					if __debug__:
+						from traceback import print_exc
+						print_exc(file=sys.stderr)
 					fmt = "span header #%d seems to declare an invalid span!"
 					print(fmt % (spanblockNum + 1), file=sys.stderr)
 				else:
@@ -129,6 +136,8 @@ class DiskHeader():
 	# (Presumably done to avoid colliding with a user's partition table?)
 	OFFSET = 0x2000
 
+	sizeof = struct.calcsize(BASIC_FORMAT)
+
 	def __init__(self, raw_data: bytes):
 		"""
 		Initializes the DiskHeader object by attempting to parse the data in `raw_data`
@@ -165,9 +174,12 @@ class DiskHeader():
 		ret = "DiskHeader(volumes=%d, free=%d, used=%d, diskvol_blocks=%d, blocks=%d)"
 		return ret % (self.volumes, self.free, self.used, self.diskvolBlocks, self.blocks)
 
-	@classmethod
-	def sizeof(cls) -> int:
-		"""
-		Returns the size (in bytes) of this object, as stored in the cache
-		"""
-		return struct.calcsize(cls.BASIC_FORMAT)
+	# @classmethod
+	# def sizeof(cls) -> int:
+	# 	"""
+	# 	Returns the size (in bytes) of this object, as stored in the cache
+	# 	"""
+	# 	return struct.calcsize(cls.BASIC_FORMAT)
+
+utils.log("'span' module: Loaded")
+utils.log("\tDiskHeader size:", DiskHeader.sizeof)

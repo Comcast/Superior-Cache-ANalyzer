@@ -678,3 +678,8 @@ def unpackHeap(heap: bytes, offset: int, size: int, http: HTTPHdr) -> \
 			return ret
 
 	return ret
+
+utils.log("'http' module: Loaded")
+utils.log("\tHDRHEAP format:", HDRHeap.BASIC_FORMAT())
+utils.log("\tHDRHEAP size:", HDRHeap.sizeof())
+utils.log("\tAlternate (header) size:", Alternate.sizeof)

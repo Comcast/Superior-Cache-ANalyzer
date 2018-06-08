@@ -20,7 +20,7 @@ import struct
 import typing
 import ctypes
 import numpy as np
-#from . import utils
+from . import utils
 
 #uncommentif PYTHON_MAJOR_VERSION > 5
 #from . import http, config
@@ -341,12 +341,14 @@ class Doc(ctypes.Structure):
 	# 	self.alternates = []
 	# 	self.data = b''
 
-	@classmethod
-	def sizeof(cls: type) -> int:
-		"""
-		Returns the size (in bytes) of a Doc structure
-		"""
-		return struct.calcsize("II5QI4BIIII")
+	# @classmethod
+	# def sizeof(cls: type) -> int:
+	# 	"""
+	# 	Returns the size (in bytes) of a Doc structure
+	# 	"""
+	# 	return struct.calcsize("II5QI4BIIII")
+
+	sizeof = struct.calcsize("II5QI4BIIII")
 
 	# Yet another dirty hack to maintain compatibility with a deprecated version of a
 	# programming language that hasn't released breaking changes since December 2008.
@@ -389,6 +391,7 @@ class Doc(ctypes.Structure):
 		"""
 		Fetches the urls associated with this `Doc`'s `Alternate`s.
 		"""
+		utils.log("Doc.urls: returning utils for", self)
 		return [a.requestURL() for a in self.alternates]
 
 	def __len__(self) -> int:
@@ -425,3 +428,7 @@ class Doc(ctypes.Structure):
 # Segment/Bucket types for type-hinting ease
 Bucket = typing.NewType('Bucket', typing.Tuple[DirEntry, DirEntry, DirEntry, DirEntry])
 Segment = typing.NewType('Segment', typing.Dict[int, Bucket])
+
+utils.log("'directory' module: Loaded")
+utils.log("\tDirEntry size:", DirEntry.sizeof)
+utils.log("\tDoc size:", Doc.sizeof)
