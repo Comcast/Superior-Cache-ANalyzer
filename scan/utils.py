@@ -146,7 +146,7 @@ if __debug__:
 		"""
 		This will output debug info to stderr (but only if __debug__ is true)
 		"""
-		output = tuple(repr(arg) for arg in args)
+		output = tuple(repr(arg) if not isinstance(arg, str) else arg for arg in args)
 		sys.stderr.write(messageTemplate % (' '.join(output),))
 
 	log("'utils' module: Loaded")
