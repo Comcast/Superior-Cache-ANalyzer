@@ -256,23 +256,24 @@ def readStorageConfig() -> int:
 
 	# Read in the file as a list of lines, discarding leading or trailing newlines
 	with open(PATH+'storage.config') as file:
-		lines = [line.strip() for line in file.read().strip().split('\n')]
+		lines = [line.strip().split(' ')[0].strip() for line in file.read().strip().split('\n')]
 
 	# Obtains the storage file/device name on each non-comment, non-empty line.
 	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
-
 	for cache in lines:
-		if not cache.startswith('/'):
+		if os.path.isfile(cache):
+			cache = os.path.abspath(cache)
+
+		elif os.path.isdir(cache):
+			cache = os.path.join(cache, 'cache.db')
+
+		elif not cache.startswith('/'):
 			try:
 				_ = PATH.index('etc')
 			except ValueError:
 				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
 				                                      (PATH+'storage.config', cache))
-			cache = PATH.split('etc')[0]+cache
-
-		cache = os.path.abspath(cache)
-		if os.path.isdir(cache):
-			cache = os.path.join(cache, 'cache.db')
+			cache = os.path.join(PATH.split('etc')[0], cache)
 
 		STORAGE_CONFIG[cache] = (utils.fileSize(cache), span.Span(cache))
 

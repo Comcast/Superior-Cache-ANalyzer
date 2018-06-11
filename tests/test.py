@@ -22,14 +22,15 @@ import typing
 import struct
 import os
 import sys
+import argparse
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
 try:
 	from scan import utils, directory, span, config, stripe
 except ImportError as e:
-	print("Tests should be run from the project's root directory! (%s)" % e, file=sys.stderr)
+	print("Tests should be run from the project's root directory (or while it's installed)! (%s)" % e, file=sys.stderr)
 	exit(1)
 
 # offset: 4294967296
@@ -146,6 +147,13 @@ def main() -> int:
 
 	Returns the number of failed tests.
 	"""
+	args = argparse.ArgumentParser(description="Testing Suite for the Superior Cache ANalyzer")
+	args.add_argument("--ats_root",
+	                  help="Specify the root path to an ATS installation to use for the tester.",
+	                  type=str)
+
+	if args.ats_root:
+		config.init(os.path.join(args.ats_root, 'etc', 'trafficserver'))
 	results = testSpanBlockHeader()
 	results += testDirEntry()
 	results += testDoc()

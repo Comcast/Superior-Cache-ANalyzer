@@ -51,6 +51,8 @@ ts.Disk.remap_config.AddLine(
     'map / http://127.0.0.1:{0}'.format(server.Variables.Port)
 )
 
+ts.Disk.storage_config.AddLine()
+
 # Test 1 - 200 response and cache fill
 tr = Test.AddTestRun()
 tr.Processes.Default.StartBefore(server)
@@ -62,5 +64,6 @@ tr.StillRunningAfter = ts
 
 # At this point, there should be something(TM) in the cache...
 
-from scan import utils, directory, span, config, stripe, ui
-
+tr = Test.AddTestRun()
+tr.Setup.Copy('test.py')
+tr.Processes.Default.Command = '{0} -OO ./test.py --ats_root ./ts/'
