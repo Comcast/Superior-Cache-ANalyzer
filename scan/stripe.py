@@ -240,12 +240,12 @@ class Stripe():
 				# read in the entire structure at once
 				f.readinto(buffer)
 
-				doc = directory.Doc.from_buffer(buffer[:directory.Doc.sizeof()])
+				doc = directory.Doc.from_buffer(buffer[:directory.Doc.sizeof])
 
 				if doc.magic == directory.Doc.MAGIC and doc.hlen > 0:
 					try:
-						doc.setInfo(buffer[directory.Doc.sizeof() : doc.hlen])
-						doc.setData(buffer[directory.Doc.sizeof() + doc.hlen : len(doc)])
+						doc.setInfo(buffer[directory.Doc.sizeof : doc.hlen])
+						doc.setData(buffer[directory.Doc.sizeof + doc.hlen : len(doc)])
 					except struct.error as e:
 						assert not print("Error reading doc pointed to by %s : '%s'" % (d, e), file=sys.stderr)
 						pass
@@ -396,6 +396,7 @@ class Stripe():
 		through a stripe's directory in order for it to be useful. However, this method
 		MUST be called prior to fetching either `DirEntry`s or `Doc`s out of the stripe.
 		"""
+		utils.log("Stripe.read: reading in metadata for", self)
 
 		with io.open(self.file, 'rb') as infile:
 
@@ -454,7 +455,7 @@ class Stripe():
 		so that memory usage doesn't get out of control.
 		Note that you *MUST* have called `self.read()` prior to the calling of this method.
 		"""
-
+		utils.log("Stripe.readDir: reading in directory for", self)
 		with io.open(self.file, 'rb', self.numDirEntries * 10) as infile:
 			infile.seek(self.directoryOffset)
 
@@ -558,15 +559,15 @@ class Stripe():
 			infile.seek(self.contentOffset + dirent.Offset)
 			infile.readinto(docbuff)
 
-		newDoc = directory.Doc.from_buffer(docbuff[:directory.Doc.sizeof()])
+		newDoc = directory.Doc.from_buffer(docbuff[:directory.Doc.sizeof])
 		if newDoc.magic != directory.Doc.MAGIC:
 			if __debug__:
 				raise ValueError("DirEntry does not appear to point to a valid Doc!"\
 				                 " (%r -> %r)" % (arg0, newDoc))
 			return None
 
-		newDoc.setInfo(docbuff[directory.Doc.sizeof():newDoc.hlen])
-		newDoc.setData(docbuff[directory.Doc.sizeof()+newDoc.hlen : len(newDoc)])
+		newDoc.setInfo(docbuff[directory.Doc.sizeof:newDoc.hlen])
+		newDoc.setData(docbuff[directory.Doc.sizeof+newDoc.hlen : len(newDoc)])
 
 		return newDoc
 	#pylint: enable=E0102
@@ -597,12 +598,15 @@ class Stripe():
 		self.file.readinto(docbuff)
 
 		# Separate he doc header bytes from the rest
-		dhead = docbuff[ : directory.Doc.sizeof()]
+		dhead = docbuff[ : directory.Doc.sizeof]
 
 		# Attempt doc header construction
 		try:
 			doc = directory.Doc.from_buffer(dhead)
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			return None
 		finally:
 			# restore stream position
@@ -673,7 +677,7 @@ class Stripe():
 		`None` value into the Queue, signaling its termination.
 		"""
 		fd = io.open(self.file, 'rb')
-		ds, dm, cm = directory.Doc.sizeof(), directory.Doc.MAGIC, directory.Doc.CORRUPT_MAGIC
+		ds, dm, cm = directory.Doc.sizeof, directory.Doc.MAGIC, directory.Doc.CORRUPT_MAGIC
 		try:
 			coffset = self.contentOffset
 			for d in dirPart:
@@ -689,16 +693,18 @@ class Stripe():
 						doc.setData(docbuff[ds + doc.hlen : len(doc)])
 					except struct.error as e:
 						if __debug__:
-							from sys import stderr
-							print("Error reading doc pointed to by %s : '%s'" % (d, e), file=stderr)
+							from traceback import print_exc
+							print("Error reading doc pointed to by %s : '%s'" % (d, e), file=sys.stderr)
+							print_exc(file=sys.stderr)
 					else:
 						sz = doc.totalLength
 						for a in doc.alternates:
 							url = a.requestURL()
 							q.put((url, sz))
 				elif __debug__ and doc.magic == cm:
-					from sys import stderr
-					print("Corrupt Doc pointed to by %s: '%s'" % (d, doc), file=stderr)
+					from traceback import print_exc
+					print("Corrupt Doc pointed to by %s: '%s'" % (d, doc), file=sys.stderr)
+					print_exc(file=sys.stderr)
 		finally:
 			fd.close()
 			q.put(None)
@@ -810,3 +816,7 @@ def SORdirSize(start: int, length: int) -> typing.Tuple[int, int, int]:
 
 	# I'm told three times is sufficient for this. Don't ask me.
 	return singleStep(*singleStep(*singleStep(0, 0, start)))
+
+utils.log("'stripe' module: Loaded")
+utils.log("\t\tSpan Block Header size:", SpanBlockHeader.sizeof)
+utils.log("\t\tStripe (metadata) size:", Stripe.sizeof)

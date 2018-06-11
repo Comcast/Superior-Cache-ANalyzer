@@ -18,7 +18,7 @@ Analyzes Apache Traffic Server on-disk caches
 """
 import sys
 
-__version__ = "2.2.4"
+__version__ = "2.2.5"
 
 __author__ = "Brennan W. Fieck"
 
@@ -27,16 +27,6 @@ def main() -> int:
 	Main routine
 	"""
 
-	# force optimization (assert statements are left out when '-O' is specified.)
-	try:
-		assert False
-	except AssertionError:
-		from os import execl
-		execl(sys.executable, sys.executable, '-OO', *sys.argv)
-
-
-	from . import ui
-	from . import config
 	import argparse
 
 	parser = argparse.ArgumentParser(description="Superior Cache ANalyzer.",
@@ -65,6 +55,12 @@ def main() -> int:
 	                    type=str,
 	                    default=False)
 
+	parser.add_argument("--debug",
+	                    help="Logs debug output to stderr.",
+	                    action="store_const",
+	                    const=True,
+	                    default=False)
+
 	parser.add_argument("-V",
 	                    "--version",
 	                    help="Prints version information and exits",
@@ -79,6 +75,14 @@ def main() -> int:
 		print("Superior Cache ANalyzer (SCAN)", "v%s" % __version__)
 		print("Running on", impl(), "v%s" % ver())
 		return 0
+
+	if __debug__ and not args.debug:
+		# force optimization (will set __debug__ = False)
+		from os import execl
+		execl(sys.executable, sys.executable, '-OO', *sys.argv)
+
+	from . import ui
+	from . import config
 
 	if args.fips:
 		config.FIPS = True

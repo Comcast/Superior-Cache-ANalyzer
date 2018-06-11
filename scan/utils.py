@@ -40,7 +40,7 @@ STORE_BLOCK_SIZE = 8192
 
 # Span block sizes MUST be multiples of this value.
 # So it's used to check validity of a span block
-VOL_BLOCK_SIZE = 128 * (1024**2)
+VOL_BLOCK_SIZE = 0x8000000
 
 
 ########################################################
@@ -79,8 +79,16 @@ def unpacklong(raw: bytes) -> int:
 	disk. The upshot is that each 32 bits is written in the native byte order, but the double-word
 	that represents the whole value is written high bits first then low bits, as though it were
 	Big-Endian regardless of the host architecture's byte order.
+
+	Raises a ValueError if 'raw' is not of type 'bytes' or doesn't appear to represent a `long`.
 	"""
-	upper, lower = struct.unpack("II", raw)
+	try:
+		upper, lower = struct.unpack("II", raw)
+	except struct.error as e:
+		if __debug__:
+			from traceback import print_exc
+			print_exc(file=sys.stderr)
+		raise ValueError("Couldn't convert '%r' to 'long': %s" % (raw, e))
 	return ((16**8) * upper) + lower
 
 def fileSize(fname: str) -> int:
@@ -91,11 +99,19 @@ def fileSize(fname: str) -> int:
 	0 file size; this will get the size of the disk by opening it and seeing how far you
 	have to go to get to the end of the file.
 	"""
+	global log
+	log("fileSize: getting size of", fname)
 	fd = os.open(fname, os.O_RDONLY)
+	log("fileSize: fd of", fname, "is", fd)
 	try:
+		size = os.lseek(fd, 0, os.SEEK_END)
+		log("fileSize: size of", fname, '(', fd, ") is", size)
 		return os.lseek(fd, 0, os.SEEK_END)
 	except OSError as e:
 		print(e, file=sys.stderr)
+		if __debug__:
+			from traceback import print_exc
+			print_exc(file=sys.stderr)
 	finally:
 		os.close(fd)
 
@@ -114,4 +130,34 @@ def numProcs() -> int:
 	"""
 	Gets the number of processes currently running on the system.
 	"""
+	global log
+	num = len(psutil.pids())
+	log("numProcs:", num)
 	return len(psutil.pids())
+
+if __debug__:
+	from os import isatty
+
+	if isatty(sys.stderr.fileno()):
+		messageTemplate = "\033[38;2;174;129;255mDEBUG: %s\033[0m\n"
+	else:
+		messageTemplate = "DEBUG: %s\n"
+	def log(*args: object):
+		"""
+		This will output debug info to stderr (but only if __debug__ is true)
+		"""
+		output = tuple(repr(arg) if not isinstance(arg, str) else arg for arg in args)
+		sys.stderr.write(messageTemplate % (' '.join(output),))
+
+	log("'utils' module: Loaded")
+	log("\t\tUNSIGNED_LONG_LONG_SIZE:", UNSIGNED_LONG_LONG_SIZE)
+	log("\t\tPOINTER_SIZE:", POINTER_SIZE)
+else:
+	def log(*unused_args):
+		"""
+		dummy function to which 'log' gets set if debug isn't enabled
+		"""
+		pass
+
+# This may seem dumb, but it's necessary to allow importing it.
+log = log

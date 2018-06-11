@@ -68,7 +68,8 @@ def INK_MD5_SIZE() -> int:
 	32
 	"""
 	global FIPS
-
+	sz = 32 if FIPS else 16
+	utils.log("INK_MD5_SIZE:", sz)
 	return 32 if FIPS else 16
 
 def setLoadAvg(loadavg: str) -> typing.Optional[Loadavg]:
@@ -82,12 +83,17 @@ def setLoadAvg(loadavg: str) -> typing.Optional[Loadavg]:
 	"""
 	global MAX_LOADAVG
 
+	utils.log("setLoadAvg: setting to", loadavg)
+
 	# This is broken on Windows
 	#pylint: disable=E1101
 	currentLoadavg = os.getloadavg()
 	#pylint: enable=E1101
 
+	utils.log("setLoadAvg: current loadavg is", currentLoadavg)
+
 	MAX_LOADAVG = Loadavg(tuple(float(x) for x in loadavg.split(', ')))
+	utils.log("setLoadAvg: MAX_LOADAVG is", MAX_LOADAVG)
 	for i, val in enumerate(MAX_LOADAVG):
 		if val < currentLoadavg[i]:
 			return currentLoadavg
@@ -119,9 +125,9 @@ def allowedProcesses() -> int:
 
 	maxAllowed = int(min((MAX_LOADAVG[i] - currentLoadavg[i] for i in range(3))))
 
+	utils.log("allowedProcesses: maxAllowed is", maxAllowed)
+
 	return max((0, maxAllowed))
-
-
 
 class ConfigException(Exception):
 	"""
@@ -167,10 +173,14 @@ def init(path: str):
 		path += '/'
 	PATH = path
 
-	# Read in configs, throwing away return values cuz idc rn fam
-	_ = readRecordConfig()
-	_ = readStorageConfig()
-	_ = readVolumeConfig()
+	utils.log("config.init: reading configuration files from", PATH)
+
+	num = readRecordConfig()
+	utils.log("config.init: records.config lines:", num)
+	num = readStorageConfig()
+	utils.log("config.init: storage.config cache definitions:", num)
+	num = readVolumeConfig()
+	utils.log("config.init: volume.config volume definitions:", num)
 
 def totalCacheSizeAvailable() -> int:
 	"""
@@ -194,8 +204,12 @@ def readRecordConfig() -> int:
 	if not PATH:
 		raise ConfigException()
 
+	fname = os.path.join(PATH, 'records.config')
+
+	utils.log("readRecordConfig: opening file", fname, "for reading")
+
 	# Read in the file as a list of lines, ignoring leading or trailing newlines
-	with open(PATH+'records.config') as file:
+	with open(fname) as file:
 		lines = file.read().strip().split('\n')
 
 
@@ -211,6 +225,7 @@ def readRecordConfig() -> int:
 
 		# Valid configuration lines begin with 'CONFIG'
 		if line and line.startswith('CONFIG'):
+			utils.log("readRecordConfig: config line:", line)
 
 			# reads in the space-separated parts of the config, ignoring extra whitespace
 			# and throwing away the starting 'CONFIG'
@@ -254,26 +269,40 @@ def readStorageConfig() -> int:
 	if not PATH:
 		raise ConfigException()
 
+	fname = os.path.join(PATH, 'storage.config')
+	utils.log("readStorageConfig: opening file", fname, "for reading")
+
 	# Read in the file as a list of lines, discarding leading or trailing newlines
-	with open(PATH+'storage.config') as file:
+	with open(fname) as file:
 		lines = [line.strip().split(' ')[0].strip() for line in file.read().strip().split('\n')]
 
 	# Obtains the storage file/device name on each non-comment, non-empty line.
 	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
 	for cache in lines:
+		utils.log("readStorageConfig: cache definition:", cache)
 		if os.path.isfile(cache):
 			cache = os.path.abspath(cache)
 
 		elif os.path.isdir(cache):
 			cache = os.path.join(cache, 'cache.db')
+			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
+		# If this isn't an absolute pathname, it's probably relative to the root of
+		# some ATS install dir. So I try to walk it back by looking above an 'etc'
+		# in the config path.
 		elif not cache.startswith('/'):
 			try:
 				_ = PATH.index('etc')
 			except ValueError:
+				if __debug__:
+					from traceback import print_exc
+					from sys import stderr
+					print_exc(file=stderr)
 				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
-				                                      (PATH+'storage.config', cache))
+				                                                      (fname, cache))
 			cache = os.path.join(PATH.split('etc')[0], cache)
+
+		utils.log("readStorageConfig: Attempting to read cache file -", cache)
 
 		STORAGE_CONFIG[cache] = (utils.fileSize(cache), span.Span(cache))
 
@@ -296,8 +325,11 @@ def readVolumeConfig() -> int:
 	if not PATH:
 		raise ConfigException()
 
+	fname = os.path.join(PATH, 'volume.config')
+	utils.log("readVolumeConfig: opening file", fname, "for reading")
+
 	# Read in the file as a list of lines, discarding leading or trailing newlines
-	with open(PATH+'volume.config') as file:
+	with open(fname) as file:
 		lines = file.read().strip().split('\n')
 
 	# Discard comments and empty lines, strip away leading and trailing whitespace on each line.
@@ -310,6 +342,7 @@ def readVolumeConfig() -> int:
 	num = 0
 
 	for line in lines:
+		utils.log("readVolumeConfig: volume definiton:", line)
 		try:
 			volPos = line.index("volume=")
 		except ValueError:
@@ -336,6 +369,7 @@ def readVolumeConfig() -> int:
 
 		# Now convert sizes to numbers
 		if size.endswith('%'):
+			utils.log("readVolumeConfig: converting percent-based size in", line, "to absolute size")
 
 			# We can't convert percent-based sizes to absolute sizes
 			# if 'storage.config' has not been read
@@ -360,6 +394,8 @@ def readVolumeConfig() -> int:
 		# Absolute sizes are specified in MB
 		else:
 			size = int(size) * 0x100000
+
+		utils.log("readVolumeConfig: real size (in Bytes) is", size)
 
 		VOLUME_CONFIG[volumeNumber] = (scheme, size)
 
@@ -392,6 +428,7 @@ def spans() -> typing.Dict[str, Cache]:
 	for file, cache in STORAGE_CONFIG.items():
 
 		if cache[1] is None:
+			utils.log("config.spans: initializing span at", file)
 
 			# Ensure the proper average object size
 			if not RECORDS_CONFIG:
@@ -427,3 +464,5 @@ def getSetting(setting: str) -> typing.Union[str, int, float]:
 		return allSettings[prefixedsetting]
 
 	return "setting '%s' unset or invalid" % setting
+
+utils.log("'config' module: Loaded")
