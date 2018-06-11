@@ -96,6 +96,9 @@ def main() -> int:
 				      file=sys.stderr)
 				return 1
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Invalid loadavg: '%s'" % args.l, file=sys.stderr)
 			return 1
 
@@ -110,8 +113,14 @@ def main() -> int:
 			p = psutil.Process(os.getpid())
 			p.ionice(psutil.IOPRIO_CLASS_IDLE)
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			p.ionice(0) # Windows > Vista
 		except (OSError, AttributeError) as e:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			# either not Linux kernel v > 2.16.3+ or we're on BSD/OSX
 			print("WARNING: ionice not supported on your system. May cause heavy I/O load!",
 			      file=sys.stderr)
@@ -121,6 +130,9 @@ def main() -> int:
 		try:
 			ui.nonInteractiveDump()
 		except OSError as e:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Unable to scan cache: '%s'" % e, file=sys.stderr)
 			return 1
 		return 0
@@ -133,5 +145,8 @@ def main() -> int:
 	try:
 		ui.mainmenu()
 	except (KeyboardInterrupt, EOFError):
+		if __debug__:
+			from traceback import print_exc
+			print_exc(file=sys.stderr)
 		print()
 	return 0

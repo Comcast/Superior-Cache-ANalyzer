@@ -35,6 +35,9 @@ import typing
 import os
 from . import span, utils
 
+if __debug__:
+	import sys
+
 # I just do these for static type analysis
 Settings = typing.NewType('Settings', typing.Dict[str, typing.Union[str, int, float]])
 Cache    = typing.NewType('Cache', typing.Tuple[int, span.Span])
@@ -346,6 +349,9 @@ def readVolumeConfig() -> int:
 		try:
 			volPos = line.index("volume=")
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			# This means this line does not specify a volume
 			continue
 
@@ -364,6 +370,9 @@ def readVolumeConfig() -> int:
 		try:
 			size = line[sizePos+5:line.index(' ', sizePos)]
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			# This means the line ends immediately after size specification; with no space
 			size = line[sizePos+5:]
 

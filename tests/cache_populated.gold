@@ -1,5 +1,5 @@
 HTTP/1.1 200 OK
-Cache-Control: public
+Cache-Control: max-age=999999,public
 Content-Length: 11
 Date: ``
 Age: ``

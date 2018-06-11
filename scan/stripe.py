@@ -424,6 +424,7 @@ class Stripe():
 
 		magic = data[0]
 		if magic != self.MAGIC:
+			utils.log("Bad MAGIC Value:", hex(magic))
 			raise ValueError("Stripe does not appear to valid!")
 
 		self.version      = "%d.%d" % (data[1], data[2])
@@ -446,6 +447,7 @@ class Stripe():
 			self.validityLimit += self.writeCursor
 		self.validityLimit //= 0x200
 
+		utils.log("Finished reading metadata for", self)
 
 	def readDir(self):
 		"""
@@ -741,12 +743,18 @@ class Stripe():
 		                          self.directory[:,4] + \
 		                          (self.directory[:,1] & 0xFF)\
 		                      > 0]
+
+		# Sometimes, nothing is cached
+		if not heads:
+			return
+
 		if self.phase:
 			heads = heads[heads[:,2] & 0x3000 == 0x3000]
 		else:
 			heads = heads[(heads[:,2] & 0x3000) ^ 0x2000 == 0]
 
 		sliceSize = len(heads) // numprocs
+		utils.log("Stripe.parallelStoredObjects: splitting job for", len(heads), "heads into", numprocs, "processes")
 
 		m = multiprocessing.Manager()
 		q = m.Queue()
