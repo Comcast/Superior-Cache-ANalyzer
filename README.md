@@ -6,12 +6,15 @@ Superior Cache ANalyzer
 ## F.A.Q
 
 * Q: _Scan says it can't find my cache file, but I know it's there. What do?_
+
 	A: Sometimes, ATS installs point to cache files that are installed _relative to the ATS root directory_. This is pretty common in test setups right after a basic install. There's not really any way for SCAN to 'detect' when this is happening (though it will try), so the best solution is often just to try running `scan` _from that ATS root directory_. For example, if you have a directory `/opt/trafficserver` that holds all of the trafficserver files, try going to that directory before running `scan`.
 
 * Q: _Scan is giving me an error, and I don't know what it means/how to fix it. How fix?_
+
 	A: Congratulations, you've just been drafted! Try running scan like this: `scan --debug <other options that you specified last time> 2>scan.err` (you may not see the error message this time) and then create a [github issue](https://github.com/comcast/Superior-Cache-ANalyzer/issues/new) and upload/pastebin/^C^V the scan.err file that should've been created and link/paste it into the box, along with a description of what you were trying to do and what went wrong. I'll fix it as soon as I can.
 
 * Q: _Why can't Scan see the thing that I KNOW is in the cache?_
+
 	A: It's possible that you `scan`ed for 'thing' before it was written. The Apache Traffic Server<sup>TM</sup> will only sync directories every 60 seconds by default (effectively, this means `scan` can only see cache changes at that frequency). You could either wait a bit, or set the ATS configuration parameter `proxy.config.cache.dir.sync_frequency` to a lower value (in seconds). If that doesn't work, check out the above question.
 
 ## User Guide
@@ -67,26 +70,33 @@ sudo python3 setup.py install
 The basic usage of `scan` is pretty simple at the moment; to start the utility simply run:
 
 ```bash
-scan [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ]
+scan [ --debug ] [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ]
 ```
 
 where the options have the following meanings:
 
 * `-c` or `--config-dir` `DIR`
+
 	This option allows you to directly specify the config dir of your ATS install. This allows you to skip the prompt when `scan` first starts where you must input your configuration directory. In non-interactive mode (`-d`/`--dump` given), this option must be used if ATS is not installed under `/opt/trafficserver`.
 
 * `--debug`
+
 	When provided, this flag causes `scan` to output some verbose debugging information and exception stack traces. It also causes it to be run _without optimization_, which - depending on your Python interpreter - can have a serious impact on performance.
 
 * `-d` or `--dump` `[SPAN]`
+
 	Dumps the contents of the cache in Tabular YAML format to `stdout`, then exits. If specified, `SPAN` should be the absolute path to a cache span to dump e.g. `/dev/sdk`. WARNING: As of the time of this writing, `scan`'s "ionice" value is being set to the lowest possible value on startup, which means that this operation could take several hours to complete if you do not specify a single span. Currently, if you do not use the `-l` or `--loadavg` option, it takes about 400-500 seconds to dump a 1TB hard disk cache and about 3-7 seconds to dump an 8GB RAM cache. Use of this option with `-l` or `--loadavg` is not recommended at this time, as it will radically increase the time it takes to complete.
 
 * `-f` or `--fips`
+
 	You **must** use this option if the ATS running on your system was compiled with `ENABLE_FIPS` enabled. If you don't, everything will be messed up. Actually, some things will still be messed up even if you do.
 
 * `-l` or `--loadavg` `LOADAVG`
+
 	This flag allows the specification of a maximum system load average to be respected by the program. This is expected to be a comma-separated list of floating-point numbers (see [`man uptime`](https://linux.die.net/man/1/uptime)). For example: `scan -l "25.0, 25.0, 25.0"` ensures that no more than 25 processes will be waiting for CPU time or disk I/O on average ever 1, 5 or 15 minutes. Note that this option assumes that the system's loadavg at the time `scan` starts is representative of the system's loadavg for the entirety of its execution; if you start a very long scan job on e.g. a 1TB span, and then decide to play Crisis 1 on Medium settings using integrated graphics, your system may very well exceed a specified maximum loadavg, through no fault of `scan` itself. Note that if your system is already at or above the `LOADAVG` specified, `scan` will immediately exit as it cannot possibly run. (Implementation note: effectively this controls the number of sub-processes that can be used to scan a stripe at once, since each sub-process is potentially another process that will wait for CPU time or Disk I/O.) Note that this is only available on POSIX-compliant systems. Usage of this flag alongside `-d` or `--dump` is discouraged.
+
 * `-V` or `--version`
+
 	Prints the version information and exits. This will print both `scan`'s version and then on the next line the version and implementation of the Python interpreter used to run it. This second line would - for example - usually look like the follow on CentOS7.x systems: `Running on CPython v3.4.5`.
 
 

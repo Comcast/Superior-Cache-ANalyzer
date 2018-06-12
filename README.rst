@@ -5,6 +5,45 @@ SCAN
 
 Superior Cache ANalyzer
 
+F.A.Q
+-----
+
+-  Q: *Scan says it can't find my cache file, but I know it's there.
+   What do?*
+
+   A: Sometimes, ATS installs point to cache files that are installed
+   *relative to the ATS root directory*. This is pretty common in test
+   setups right after a basic install. There's not really any way for
+   SCAN to 'detect' when this is happening (though it will try), so the
+   best solution is often just to try running ``scan`` *from that ATS
+   root directory*. For example, if you have a directory
+   ``/opt/trafficserver`` that holds all of the trafficserver files, try
+   going to that directory before running ``scan``.
+
+-  Q: *Scan is giving me an error, and I don't know what it means/how to
+   fix it. How fix?*
+
+   A: Congratulations, you've just been drafted! Try running scan like
+   this:
+   ``scan --debug <other options that you specified last time> 2>scan.err``
+   (you may not see the error message this time) and then create a
+   `github
+   issue <https://github.com/comcast/Superior-Cache-ANalyzer/issues/new>`__
+   and upload/pastebin/^C^V the scan.err file that should've been
+   created and link/paste it into the box, along with a description of
+   what you were trying to do and what went wrong. I'll fix it as soon
+   as I can.
+
+-  Q: *Why can't Scan see the thing that I KNOW is in the cache?*
+
+   A: It's possible that you ``scan``\ ed for 'thing' before it was
+   written. The Apache Traffic ServerTM will only sync directories every
+   60 seconds by default (effectively, this means ``scan`` can only see
+   cache changes at that frequency). You could either wait a bit, or set
+   the ATS configuration parameter
+   ``proxy.config.cache.dir.sync_frequency`` to a lower value (in
+   seconds). If that doesn't work, check out the above question.
+
 User Guide
 ----------
 
@@ -111,31 +150,48 @@ utility simply run:
 
 .. code:: bash
 
-    scan [ -f --fips ] [ -d --dump [SPAN] ]
+    scan [ --debug ] [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ]
 
 where the options have the following meanings:
 
--  | ``-d`` or ``--dump`` ``[SPAN]``
-   | Dumps the contents of the cache in Tabular YAML format to
-     ``stdout``, then exits. If specified, ``SPAN`` should be the
-     absolute path to a cache span to dump e.g. ``/dev/sdk``. WARNING:
-     As of the time of this writing, ``scan``'s "ionice" value is being
-     set to the lowest possible value on startup, which means that this
-     operation could take several hours to complete if you do not
-     specify a single span. Currently, if you do not use the ``-l`` or
-     ``--loadavg`` option, it takes about 400-500 seconds to dump a 1TB
-     hard disk cache and about 3-7 seconds to dump an 8GB RAM cache. Use
-     of this option with ``-l`` or ``--loadavg`` is not recommended at
-     this time, as it will radically increase the time it takes to
-     complete.
+-  ``-c`` or ``--config-dir`` ``DIR``
 
--  | ``-f`` or ``--fips``
-   | You **must** use this option if the ATS running on your system was
-     compiled with ``ENABLE_FIPS`` enabled. If you don't, everything
-     will be messed up. Actually, some things will still be messed up
-     even if you do.
+   This option allows you to directly specify the config dir of your ATS
+   install. This allows you to skip the prompt when ``scan`` first
+   starts where you must input your configuration directory. In
+   non-interactive mode (``-d``/``--dump`` given), this option must be
+   used if ATS is not installed under ``/opt/trafficserver``.
+
+-  ``--debug``
+
+   When provided, this flag causes ``scan`` to output some verbose
+   debugging information and exception stack traces. It also causes it
+   to be run *without optimization*, which - depending on your Python
+   interpreter - can have a serious impact on performance.
+
+-  ``-d`` or ``--dump`` ``[SPAN]``
+
+   Dumps the contents of the cache in Tabular YAML format to ``stdout``,
+   then exits. If specified, ``SPAN`` should be the absolute path to a
+   cache span to dump e.g. ``/dev/sdk``. WARNING: As of the time of this
+   writing, ``scan``'s "ionice" value is being set to the lowest
+   possible value on startup, which means that this operation could take
+   several hours to complete if you do not specify a single span.
+   Currently, if you do not use the ``-l`` or ``--loadavg`` option, it
+   takes about 400-500 seconds to dump a 1TB hard disk cache and about
+   3-7 seconds to dump an 8GB RAM cache. Use of this option with ``-l``
+   or ``--loadavg`` is not recommended at this time, as it will
+   radically increase the time it takes to complete.
+
+-  ``-f`` or ``--fips``
+
+   You **must** use this option if the ATS running on your system was
+   compiled with ``ENABLE_FIPS`` enabled. If you don't, everything will
+   be messed up. Actually, some things will still be messed up even if
+   you do.
 
 -  ``-l`` or ``--loadavg`` ``LOADAVG``
+
    This flag allows the specification of a maximum system load average
    to be respected by the program. This is expected to be a
    comma-separated list of floating-point numbers (see
@@ -156,20 +212,23 @@ where the options have the following meanings:
    for CPU time or Disk I/O.) Note that this is only available on
    POSIX-compliant systems. Usage of this flag alongside ``-d`` or
    ``--dump`` is discouraged.
--  | ``-V`` or ``--version``
-   | Prints the version information and exits. This will print both
-     ``scan``'s version and then on the next line the version and
-     implementation of the Python interpreter used to run it. This
-     second line would - for example - usually look like the follow on
-     CentOS7.x systems: ``Running on CPython v3.4.5``.
 
-Once the utility is started (provided the ``-d`` or ``--dump`` flag is
-not given) you'll be faced with a pretty basic prompt. At first, your
-only option will be ``[1] Read Storage Config``. After you select this
-option, you'll be prompted to enter the location of your ATS
-configuration files. "Tab-completion" is supported for most interactive
-prompts, including the ATS configuration file prompt. SCAN will expect
-all of them to be in the same directory, and will guess that they are in
+-  ``-V`` or ``--version``
+
+   Prints the version information and exits. This will print both
+   ``scan``'s version and then on the next line the version and
+   implementation of the Python interpreter used to run it. This second
+   line would - for example - usually look like the follow on CentOS7.x
+   systems: ``Running on CPython v3.4.5``.
+
+Once the utility is started (provided the ``-d``/``--dump`` or
+``-c``/``--config`` flags are not given) you'll be faced with a pretty
+basic prompt. At first, your only option will be
+``[1] Read Storage Config``. After you select this option, you'll be
+prompted to enter the location of your ATS configuration files.
+"Tab-completion" is supported for most interactive prompts, including
+the ATS configuration file prompt. SCAN will expect all of them to be in
+the same directory, and will guess that they are in
 ``/opt/trafficserver/etc/trafficserver/`` by default. **Note that the
 use of FIPS at compilation time cannot be determined from the config
 files, and MUST be given on the command line.** Once the configuration
