@@ -33,6 +33,11 @@ def main() -> int:
 	                                 epilog="Note that if `loadavg` is not specified, SCAN will"\
 	                                 " set its 'ionice' to the lowest value possible to negate"\
 	                                 " its impact on ATS operation.")
+	parser.add_argument("-c",
+	                    "--config-dir",
+	                    help="Specify the directory in which to find config files.",
+	                    type=str)
+
 	parser.add_argument("-f",
 	                    "--fips",
 	                    help="If specified, SCAN will recognize that ATS was compiled with"\
@@ -131,7 +136,10 @@ def main() -> int:
 
 
 	try:
-		ui.mainmenu()
+		if args.config_dir:
+			ui.mainmenu(args.config_dir)
+		else:
+			ui.mainmenu()
 	except (KeyboardInterrupt, EOFError):
 		print()
 	return 0

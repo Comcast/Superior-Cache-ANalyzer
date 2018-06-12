@@ -26,7 +26,7 @@ import sys
 import re
 import os
 # from . import blocks
-from . import config
+from . import config, utils
 
 # ANSI control sequence that clears the screen
 CLEAR = "\033[H\033[J"
@@ -78,6 +78,44 @@ def setGlobCompleter():
 	readline.set_completer(complete)
 	readline.set_completer_delims(' \t\n;')
 	readline.parse_and_bind("tab: complete")
+
+def loadConfig(confDir: str):
+	"""
+	Attempts to load the configuration from 'confDir'.
+	"""
+	global MENU_ENTRIES, CLEAR
+
+	utils.log('ui.loadConfig: attempting to read config from', confDir)
+
+	if not os.path.isdir(confDir):
+		out = "Couldn't load configuration directory: '%s' - doesn't exist or is not a directory."
+		print(out % (confDir,), file = sys.stderr)
+		return
+
+	try:
+		config.init(confDir)
+	except FileNotFoundError as e:
+		from traceback import format_exc
+		utils.log(format_exc())
+		print("Configuration could not be read!\n%s\n" % e, file=sys.stderr)
+	except ValueError as e:
+		from traceback import format_exc
+		utils.log(format_exc())
+		print("Error reading configuration file: %s" % e, file=sys.stderr)
+	except OSError as e:
+		from traceback import format_exc
+		utils.log(format_exc())
+		print("Error in config file - cache not found: %s" % e, file=sys.stderr)
+	else:
+		del MENU_ENTRIES[0]
+		MENU_ENTRIES.append(("Show Cache Setup", printCache))
+		MENU_ENTRIES.append(("List Settings", printConfig))
+		MENU_ENTRIES.append(("Search for Setting", searchSetting))
+		MENU_ENTRIES.append(("List Stripes in a Span", listSpanStripes))
+		MENU_ENTRIES.append(("View URLs of objects in a Span", listSpanURLs))
+		MENU_ENTRIES.append(("View usage of a Span broken down by host", spanUsageByHost))
+		MENU_ENTRIES.append(("Dump cache usage stats to file (Tabular YAML format)", dumpUsageToFile)),
+		print(CLEAR)
 
 
 def getConfig():
@@ -429,13 +467,16 @@ def dumpSingleSpan(spanFile: str) -> int:
 
 MENU_ENTRIES = [("Read Storage config", getConfig)]
 
-def mainmenu():
+def mainmenu(confDir: str = None):
 	"""
 	The UI's main menu, which executes ui and library functions based on user input
 	"""
 	global CLEAR, MENU_ENTRIES
 
 	print(CLEAR)
+
+	if confDir:
+		loadConfig(confDir)
 
 	while True:
 		# Sets up tab completion for the Main Menu
