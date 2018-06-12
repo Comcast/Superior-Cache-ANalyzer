@@ -31,7 +31,7 @@ except ImportError as e:
 	print("Tests should be run from the project's root directory (or while it's installed)! (%s)" % e, file=sys.stderr)
 	exit(1)
 
-DISK_HEADER_SIZE = struct.calcsize("5IQ")
+DISK_HEADER_SIZE = struct.calcsize("=5IQ")
 SPAN_BLOCK_HEADER_SIZE = struct.calcsize("4IiII")
 SPAN_BLOCK_HEADER_LENGTH = 0x4000 * utils.STORE_BLOCK_SIZE
 
@@ -83,7 +83,7 @@ def testSpan() -> typing.List[str]:
 	if len(s) != len(s.blocks):
 		results.append("length '%d' doesn't match number of blocks '%d'" % (len(s), len(s.blocks)))
 
-	return ["(Span): %s" % r for r in results].extend(testStripe(s[0]))
+	return ["(Span): %s" % r for r in results] + testStripe(s[0])
 
 
 def testSpanBlockHeader(sbh: stripe.SpanBlockHeader) -> typing.List[str]:
@@ -236,7 +236,7 @@ def testStripe(s: stripe.Stripe) -> typing.List[str]:
 		results.append("directory (copy A) starts at 0x%X, but should start at 0x6000" % (s.directoryOffset,))
 
 
-	return ["(Stripe): %s" % r for r in results].extend(testSpanBlockHeader(s.spanBlockHeader))
+	return ["(Stripe): %s" % r for r in results] + testSpanBlockHeader(s.spanBlockHeader)
 
 def main() -> int:
 	"""
@@ -244,7 +244,9 @@ def main() -> int:
 
 	Returns the number of failed tests.
 	"""
-	args = argparse.ArgumentParser(description="Testing Suite for the Superior Cache ANalyzer")
+	args = argparse.ArgumentParser(description="Testing Suite for the Superior Cache ANalyzer",
+	                               epilog="NOTE: this test assumes that the cache is in the state defined "\
+	                               "by scan.test.py, which is meant to run this test script through autest.")
 	args.add_argument("--ats_configs",
 	                  help="Specify the path to an ATS installation's config files to use for the tester."\
 	                       " (if --ats_root is also specified, this should be relative to that)",

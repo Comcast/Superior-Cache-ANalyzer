@@ -33,7 +33,8 @@ ts.Disk.records_config.update({
     'proxy.config.http.wait_for_cache': 1,
 	'proxy.config.cache.ram_cache.size': 0,
     'proxy.config.config_update_interval_ms': 1,
-    'proxy.config.http.cache.required_headers': 2
+    'proxy.config.http.cache.required_headers': 0,
+    'proxy.config.cache.dir.sync_frequency': 1
 })
 
 ts.Disk.remap_config.AddLine(
@@ -53,17 +54,9 @@ tr.Processes.Default.ReturnCode = 0
 tr.Processes.Default.Streams.stdout = "gold/cache_populated.gold"
 tr.StillRunningAfter = ts
 
-# Test 2 - 200 response and cache Hit
-# tr = Test.AddTestRun()
-# tr.Processes.Default.StartBefore(server)
-# tr.Processes.Default.StartBefore(Test.Processes.ts, ready=1)
-# tr.Processes.Default.Command = request
-# tr.Processes.Default.Streams.stdout = "gold/cache_populated.gold"
-# tr.StillRunningAfter = ts
-
 # At this point, there should be something(TM) in the cache...
-
+# ... although at the time of this writing, there is not.
 tr = Test.AddTestRun()
 tr.Setup.Copy('test.py')
-tr.Processes.Default.Command = 'sleep 420 && {0} ./test.py --ats_root ts --ats_configs config'.format(sys.executable if sys.executable else 'python3')
+tr.Processes.Default.Command = 'sleep 10 && {0} ./test.py --ats_root ts --ats_configs config'.format(sys.executable if sys.executable else 'python3')
 tr.Processes.Default.ReturnCode = 0
