@@ -58,5 +58,5 @@ tr.StillRunningAfter = ts
 # ... although at the time of this writing, there is not.
 tr = Test.AddTestRun()
 tr.Setup.Copy('test.py')
-tr.Processes.Default.Command = 'sleep 2 && pwd && ls && {0} ./test.py --ats_root ts --ats_configs config'.format(sys.executable if sys.executable else 'python3')
+tr.Processes.Default.Command = 'sleep 2 && {0} ./test.py --ats_root ts --ats_configs etc'.format(sys.executable if sys.executable else 'python3')
 tr.Processes.Default.ReturnCode = 0
