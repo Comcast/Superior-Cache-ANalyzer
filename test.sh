@@ -46,7 +46,7 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 	cp ../tests/*.py "tests/gold_tests/scan/"
 	cp "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
 
-	autest -D tests/gold_tests --ats-bin goal/bin --show-color -f scan || { echo "Autests failed..." >&2; exit 2; }
+	autest -D tests/gold_tests --ats-bin goal/bin --show-color -f scan || { echo "Autests failed..." >&2; cat tests/_sandbox/scan/_tmp_scan_1-general_Default/stream.all.txt; exit 2; }
 
 	popd >/dev/null
 
