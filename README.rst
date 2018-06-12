@@ -1,7 +1,8 @@
 SCAN
 ====
 
-|License|
+| |License|
+| |Build Status|
 
 Superior Cache ANalyzer
 
@@ -407,3 +408,5 @@ readability, it allows for much easier pipelining of output e.g. via
 
 .. |License| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
    :target: https://opensource.org/licenses/Apache-2.0
+.. |Build Status| image:: https://travis-ci.org/Comcast/Superior-Cache-ANalyzer.svg?branch=master
+   :target: https://travis-ci.org/Comcast/Superior-Cache-ANalyzer
