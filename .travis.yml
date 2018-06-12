@@ -8,7 +8,7 @@ cache:
   timeout: 604800
   pip: true
   directories:
-    - ats_test
+    - ats_test/goal
 
 sudo: required
 
