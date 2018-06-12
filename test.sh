@@ -43,7 +43,7 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 
 	mkdir -p "tests/gold_tests/scan/gold"
 
-	cp "../tests/scan.test.py" "tests/gold_tests/scan/"
+	cp "../tests/*.py" "tests/gold_tests/scan/"
 	cp "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
 
 	autest -D tests/gold_tests --ats-bin goal/bin --show-color -f scan || { echo "Autests failed..." >&2; exit 2; }
