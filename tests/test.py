@@ -258,6 +258,10 @@ def main() -> int:
 
 	if args.ats_root:
 		os.chdir(args.ats_root)
+		here = os.listdir()
+		print(here)
+		if 'config' in here:
+			print(os.listdir("./config/"))
 	if args.ats_configs:
 		config.init(args.ats_configs)
 
