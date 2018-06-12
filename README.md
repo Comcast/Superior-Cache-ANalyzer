@@ -50,7 +50,7 @@ sudo python3 setup.py install
 ```
 
 >Note that SCAN is only guaranteed to work for Python versions 3.4.1 and greater.
->If you want to run the tests, make sure you're in the project's root directory (the downloaded folder), and run `tests/test.py`. (Warning: as of the time of this writing, the vast majority of the tests are broken. Will fix pending a convenient way to populate a suitable test cache)
+>If you want to run the tests see 'Tests' below.
 
 ### Usage
 The basic usage of `scan` is pretty simple at the moment; to start the utility simply run:
@@ -127,6 +127,9 @@ where `<host>` is the fully-qualified domain name of the host, XXX.XB is the tot
 
 #### `[7] Dump cache usage stats to file (Tabular YAML format)`
 This option will ask you to first name a file for output (relative or absolute paths - doesn't matter which), then it will dump the output of a call to the 'View URLs of objects in a Span' for **ALL** spans in the cache system to the named file in Tabular YAML (TYAML) format (which is just YAML but indented with tabs instead of spaces and accepts `None` as a null value.)
+
+### Tests
+If you want to run the tests, be sure you're in the project's root directory and run the `test.sh` script. Note that the unit tests will _download and attempt to build Apache Traffic Server from source_ and as such will also require all of the dependencies of Apache Traffic Server. A minimal linting test (Good for auditing your contribution at a glance) can be run with `pylint` by just running `pylint --rcfile=./.pylintrc scan/` from the project's root directory. A  `pylint` score above 9.5 and with no erros (e.g. E001: SyntaxError) is considered "passing".
 
 ## Tabular YAML Format
 The output of the interactive mode's 7<sup>th</sup> option and the `-d` or `--dump` option are given in what's been referred to as "Tabular YAML Format". As the name implies, this is similar to YAML. In fact, it should be considered syntactically identical to YAML but for one exception: indentation is *always done via the tab character, **never with spaces***. This was done because without harming its human readability, it allows for much easier pipelining of output e.g. via `cut`.

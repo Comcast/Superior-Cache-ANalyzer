@@ -1,14 +1,40 @@
 language: python
 python:
-  - "3.4"
   - "3.5"
   - "3.6"
 
+cache:
+  timeout: 604800
+  pip: true
+  directories:
+    - ats_test
+
+sudo: required
+
+addons:
+  apt:
+    packages:
+      - git
+      - autoconf
+      - automake
+      - software-properties-common
+      - pkg-config
+      - libtool
+      - make
+      - tcl
+      - libpcre3-dev
+      - libcap-dev
+      - flex
+      - hwloc
+      - lua5.2
+      - libncurses-dev
+      - curl
+
 # sets up pylint
-before_install: python3 -m pip install pylint
+before_install: 'sudo apt-add-repository -y "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-4.0 main" && sudo apt-get update && sudo apt-get install -y --allow-unauthenticated clang-4.0 lldb-4.0 && python -m pip install pylint autest hyper dnslib'
 
 # Install step (should handle dependencies)
-install: python -m pip install .
+install: python -m pip install --upgrade .
 
 # Build step (Checks pylint score as well)
 script: ./test.sh

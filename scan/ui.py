@@ -139,10 +139,19 @@ def getConfig():
 		try:
 			config.init(choice)
 		except FileNotFoundError as e:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Configuration could not be read!\n%s\n" % e, file=sys.stderr)
 		except ValueError as e:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Error reading configuration file: %s" % e, file=sys.stderr)
 		except OSError as e:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Error in config file - cache not found: %s" % e, file=sys.stderr)
 		else:
 			del MENU_ENTRIES[0]
@@ -397,8 +406,14 @@ def dumpUsageToFile():
 						print(CLEAR)
 				return "Done!"
 			except OSError as e:
+				if __debug__:
+					from traceback import print_exc
+					print_exc(file=sys.stderr)
 				print("Could not write to '%s'! (%s)" % (choice, e), file=sys.stderr)
 			except ValueError as e:
+				if __debug__:
+					from traceback import print_exc
+					print_exc(file=sys.stderr)
 				print("Error!:", e, file=sys.stderr)
 
 def nonInteractiveDump():
@@ -500,4 +515,7 @@ def mainmenu(confDir: str = None):
 			else:
 				raise ValueError()
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			print("Please enter a valid option number")

@@ -508,6 +508,9 @@ class Alternate():
 		try:
 			beginning = self.requestHeaders[::-1].index('ptth') + 4
 		except (IndexError, TypeError):
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			return "Unknown"
 
 		return self.requestHeaders[-beginning:]
@@ -578,6 +581,9 @@ class Alternate():
 			try:
 				latest.fragmentOffsets = struct.unpack("%dP" % numFrags, raw[cls.sizeof:fragTblSize])
 			except struct.error:
+				if __debug__:
+					from traceback import print_exc
+					print_exc(file=sys.stderr)
 				assert not print("Warning! Fragment table construction error! Bailing...", file=sys.stderr)
 				return current
 
@@ -627,6 +633,9 @@ class Alternate():
 		try:
 			latest.responseHeaders = responseHeaders.decode()
 		except UnicodeError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			latest.responseHeaders = responseHeaders
 
 		if theEnd < 0:

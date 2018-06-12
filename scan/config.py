@@ -35,6 +35,9 @@ import typing
 import os
 from . import span, utils
 
+if __debug__:
+	import sys
+
 # I just do these for static type analysis
 Settings = typing.NewType('Settings', typing.Dict[str, typing.Union[str, int, float]])
 Cache    = typing.NewType('Cache', typing.Tuple[int, span.Span])
@@ -274,18 +277,23 @@ def readStorageConfig() -> int:
 
 	# Read in the file as a list of lines, discarding leading or trailing newlines
 	with open(fname) as file:
-		lines = [line.strip() for line in file.read().strip().split('\n')]
+		lines = [line.strip().split(' ')[0].strip() for line in file.read().strip().split('\n')]
 
 	# Obtains the storage file/device name on each non-comment, non-empty line.
 	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
-
 	for cache in lines:
 		utils.log("readStorageConfig: cache definition:", cache)
+		if os.path.isfile(cache):
+			cache = os.path.abspath(cache)
+
+		elif os.path.isdir(cache):
+			cache = os.path.join(cache, 'cache.db')
+			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
 		# If this isn't an absolute pathname, it's probably relative to the root of
 		# some ATS install dir. So I try to walk it back by looking above an 'etc'
 		# in the config path.
-		if not cache.startswith('/'):
+		elif not cache.startswith('/'):
 			try:
 				_ = PATH.index('etc')
 			except ValueError:
@@ -295,14 +303,9 @@ def readStorageConfig() -> int:
 					print_exc(file=stderr)
 				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
 				                                                      (fname, cache))
-			cache = PATH.split('etc')[0]+cache
+			cache = os.path.join(PATH.split('etc')[0], cache)
 
-		cache = os.path.abspath(cache)
 		utils.log("readStorageConfig: Attempting to read cache file -", cache)
-
-		if os.path.isdir(cache):
-			cache = os.path.join(cache, 'cache.db')
-			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
 		STORAGE_CONFIG[cache] = (utils.fileSize(cache), span.Span(cache))
 
@@ -346,6 +349,9 @@ def readVolumeConfig() -> int:
 		try:
 			volPos = line.index("volume=")
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			# This means this line does not specify a volume
 			continue
 
@@ -364,6 +370,9 @@ def readVolumeConfig() -> int:
 		try:
 			size = line[sizePos+5:line.index(' ', sizePos)]
 		except ValueError:
+			if __debug__:
+				from traceback import print_exc
+				print_exc(file=sys.stderr)
 			# This means the line ends immediately after size specification; with no space
 			size = line[sizePos+5:]
 
