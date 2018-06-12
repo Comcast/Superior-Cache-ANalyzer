@@ -11,7 +11,7 @@ fi
 echo "$lintResults"
 
 if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z "$(which autoreconf 2>/dev/null)" && ! -z "$(which make 2>/dev/null)" ]]; then
-	if [[ ! -d ats_test/goal || -z "$(ls -A ats_test/goal)" ]]; then
+	if [[ ! -d ats_test/goal ]]; then
 		git clone https://github.com/apache/trafficserver.git ats_test
 		pushd >/dev/null ats_test
 		git checkout 7.1.x
@@ -38,8 +38,8 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 
 		mkdir -p "tests/gold_tests/scan/gold"
 
-		cp ../tests/*.py "tests/gold_tests/scan/"
-		cp "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
+		cp -f ../tests/*.py "tests/gold_tests/scan/"
+		cp -f "../tests/cache_populated.gold" "tests/gold_tests/scan/gold/"
 	else
 		pushd >/dev/null ats_test
 	fi
@@ -51,11 +51,3 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 else
 	echo "Cannot run autests, need git, make, autoconf and a C compiler (and ATS dependencies)" >&2
 fi
-
-
-# tests/test.py
-
-# if [[ $? -ne 0 ]]; then
-# 	exit 1
-# fi
-
