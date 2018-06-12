@@ -123,14 +123,17 @@ def main() -> int:
 			print("(Info: %s)" % e, file=sys.stderr)
 
 	if args.dump is None:
+		confDir = args.config_dir if args.config_dir else "/opt/trafficserver/etc/trafficserver"
 		try:
+			config.init(config_dir)
 			ui.nonInteractiveDump()
-		except OSError as e:
+		except (OSError, FileNotFoundError, ValueError) as e:
 			print("Unable to scan cache: '%s'" % e, file=sys.stderr)
 			return 1
 		return 0
 	elif args.dump:
-		config.init('/opt/trafficserver/etc/trafficserver/')
+		confDir = args.config_dir if args.config_dir else "/opt/trafficserver/etc/trafficserver"
+		config.init(confDir)
 
 		return ui.dumpSingleSpan(args.dump)
 
