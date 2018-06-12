@@ -11,7 +11,7 @@ fi
 echo "$lintResults"
 
 if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z "$(which autoreconf 2>/dev/null)" && ! -z "$(which make 2>/dev/null)" ]]; then
-	if [[ ! -d ats_test ]]; then
+	if [[ ! -d ats_test/goal || -z "$(ls -A ats_test/goal)" ]]; then
 		git clone https://github.com/apache/trafficserver.git ats_test
 		pushd >/dev/null ats_test
 		git checkout 7.1.x
