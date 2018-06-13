@@ -72,6 +72,7 @@ The basic usage of `scan` is pretty simple at the moment; to start the utility s
 
 ```bash
 scan [ --debug ] [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ]
+scan [ --debug ] [ -f --fips ] [ -D --dump-breakdown [ SPAN ] ] [ -c --config-dir DIR ]
 ```
 
 where the options have the following meanings:
@@ -86,7 +87,11 @@ where the options have the following meanings:
 
 * `-d` or `--dump` `[SPAN]`
 
-	Dumps the contents of the cache in Tabular YAML format to `stdout`, then exits. If specified, `SPAN` should be the absolute path to a cache span to dump e.g. `/dev/sdk`. WARNING: As of the time of this writing, `scan`'s "ionice" value is being set to the lowest possible value on startup, which means that this operation could take several hours to complete if you do not specify a single span. Currently, if you do not use the `-l` or `--loadavg` option, it takes about 400-500 seconds to dump a 1TB hard disk cache and about 3-7 seconds to dump an 8GB RAM cache. Use of this option with `-l` or `--loadavg` is not recommended at this time, as it will radically increase the time it takes to complete.
+	Dumps the contents of the cache in Tabular YAML format to `stdout`, then exits. This will cause any `-D`/`--dupm-breakdown` flags given to be ignored. If specified, `SPAN` should be the path to a cache span to dump as specified in `storage.config` e.g. `/dev/sdk`. WARNING: As of the time of this writing, `scan`'s "ionice" value is being set to the lowest possible value on startup, which means that this operation could take several hours to complete if you do not specify a single span. Currently, if you do not use the `-l` or `--loadavg` option, it takes about 400-500 seconds to dump a 1TB hard disk cache and about 3-7 seconds to dump an 8GB RAM cache. Use of this option with `-l` or `--loadavg` is not recommended at this time, as it will radically increase the time it takes to complete.
+
+* `-D` or `--dump-breakdown` `[SPAN]`
+
+	Dumps the usage of the cache to `stdout` in Tabular YAML format, broken down by host, then exits. If `-d`/`--dump` was given on the command line, this flag will be ignored if present. If specified, `SPAN` should be the path to a cache span to dump as specified in `storage.config` e.g. `/dev/sdk`. WARNING: As of the time of this writing, `scan`'s "ionice" value is being set to the lowest possible value on startup, which means that this operation could take several hours to complete if you do not specify a single span. Currently, if you do not use the `-l` or `--loadavg` option, it takes about 400-500 seconds to dump a 1TB hard disk cache and about 3-7 seconds to dump an 8GB RAM cache. Use of this option with `-l` or `--loadavg` is not recommended at this time, as it will radically increase the time it takes to complete.
 
 * `-f` or `--fips`
 
