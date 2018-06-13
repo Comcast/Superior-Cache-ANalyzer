@@ -482,7 +482,7 @@ def spanUsageByHost(c: config.Cache) -> str:
 	"""
 	hosts = {}
 	fmt = "%s:\n\t\tDocs: %d\n\t\tTotalSize: %s\n\t\tPercentOfAvailableSpace: "\
-	      "%1.2f%%\n\t\tPercentOfUsedSpace: %1.2f"
+	      "%1.2f%%\n\t\tPercentOfUsedSpace: %1.2f%%"
 
 	for url, sz in c[1].storedObjects():
 		if url.host not in hosts:
@@ -492,7 +492,7 @@ def spanUsageByHost(c: config.Cache) -> str:
 
 	total = sum(s for _,s in hosts.values())
 
-	hosts = [fmt % (h, n, s, 100.0*s/c[0], 100.0*s/total)\
+	hosts = [fmt % (h, n, byteSized(s), 100.0*s/c[0], 100.0*s/total)\
 	         for h,(n,s) in\
 	         sorted(hosts.items(), key=lambda x: x[1][1], reverse=True)]
 
