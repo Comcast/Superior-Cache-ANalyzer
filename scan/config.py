@@ -100,6 +100,7 @@ def setLoadAvg(loadavg: str) -> typing.Optional[Loadavg]:
 	for i, val in enumerate(MAX_LOADAVG):
 		if val < currentLoadavg[i]:
 			return currentLoadavg
+	return None
 
 def allowedProcesses() -> int:
 	"""

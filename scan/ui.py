@@ -258,12 +258,16 @@ def listSpanStripes():
 			break
 
 		elif choice in caches:
-			for stripe in caches[choice][1]:
-				print("%s stripe, created %s (version %s)" % (byteSized(len(stripe)),
-				                                              stripe.ctime(),
-				                                              stripe.version))
-			_ = input("\nPress Enter to continue...")
-			print(CLEAR)
+			s = caches[choice][1]
+			if s:
+				for stripe in s:
+					print("%s stripe, created %s (version %s)" % (byteSized(len(stripe)),
+					                                              stripe.ctime(),
+					                                              stripe.version))
+				_ = input("\nPress Enter to continue...")
+				print(CLEAR)
+			else:
+				print("No stripes found!")
 			break
 
 
@@ -472,7 +476,7 @@ def dumpSingleSpan(spanFile: str) -> int:
 		return 2
 	return 0
 
-def spanUsageByHost(c: config.Cache) -> str:
+def spanUsageByHostDump(c: config.Cache) -> str:
 	"""
 	Returns a Tabular YAML-formatted representation of the cache `c`'s usage, broken down
 	by host.
@@ -513,7 +517,7 @@ def breakDownDump(spanFile: str = None):
 			print("Error: '%s' is not a cache span!" % (spanFile,), file=sys.stderr)
 			return 1
 		print("%TYAML 1.1\n---")
-		print(spanUsageByHost(spans[spanFile]))
+		print(spanUsageByHostDump(spans[spanFile]))
 		return 0
 
 	utils.log("ui.breakDownDump: Dumping usage breakdown for entire cache")
@@ -522,7 +526,7 @@ def breakDownDump(spanFile: str = None):
 	try:
 		for s in spans:
 			print(s, ':\n\t', sep='', end='')
-			print(spanUsageByHost(spans[s]).replace('\n', "\n\t"))
+			print(spanUsageByHostDump(spans[s]).replace('\n', "\n\t"))
 	except KeyboardInterrupt:
 		print("Warning, job terminated early! Quitting...", file=sys.stderr)
 		return 2

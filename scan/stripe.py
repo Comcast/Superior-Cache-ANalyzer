@@ -51,8 +51,7 @@ class SpanBlockHeader():
 
 	# The format of a span block header:
 	# two unsigned long longs, one signed int, and two unsigned ints
-	BASIC_FORMAT = "=%ds%dsiII" % (utils.UNSIGNED_LONG_LONG_SIZE,
-	                               utils.UNSIGNED_LONG_LONG_SIZE)
+	BASIC_FORMAT = "QQiII"
 	# those last two 'I's are bitfields, but the data I've
 	# been looking at seems to align these across 4-byte boundaries, which
 	# effectively makes them each their own unsigned ints.
@@ -74,19 +73,19 @@ class SpanBlockHeader():
 		raw_data: bytes -- The raw header data.
 		raises: struct.error -- if unpacking fails.
 		"""
-		offset,\
-		length,\
+		self.offset,\
+		self.length,\
 		self.number,\
 		Type,\
 		free = struct.unpack(self.BASIC_FORMAT, raw_data)
 
-		self.offset = utils.unpacklong(offset)
+		# self.offset = utils.unpacklong(offset)
 
 		# The '+2' here is necessary to make this into an actual
 		# multiple of 128MB, which indicates to me that something's
 		# either wrong with 'unpacklong' (unlikely since other things work)
 		# or with the BASIC_FORMAT unpacking I'm doing here.
-		self.length = utils.unpacklong(length)
+		# self.length = utils.unpacklong(length)
 		self.Type = utils.CacheType(Type)
 		self.free = bool(free)
 

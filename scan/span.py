@@ -92,6 +92,14 @@ class Span():
 		"""
 		return len(self.blocks)
 
+	def __bool__(self) -> bool:
+		"""
+		Boolean coercion for Spans
+
+		A span is True-y if it contains at least one stripe, otherwise it's False-y
+		"""
+		return len(self) > 0
+
 	@asyncio.coroutine
 	def storedObjects(self) -> typing.Generator[typing.Tuple[str, int], None, None]:
 		"""
@@ -113,12 +121,12 @@ class Span():
 				cleanUp, block.directory = False, None
 
 
-	def tryReadObject(self, key: str) -> str:
-		"""
-		Tries to fetch the object referred to by 'key' from the cache
-		raises an IndexError if the object is not found in the cache.
-		"""
-		return NotImplemented
+	# def tryReadObject(self, key: str) -> str:
+	# 	"""
+	# 	Tries to fetch the object referred to by 'key' from the cache
+	# 	raises an IndexError if the object is not found in the cache.
+	# 	"""
+	# 	return NotImplemented
 
 
 class DiskHeader():
@@ -127,7 +135,7 @@ class DiskHeader():
 	"""
 	# The format of the header -
 	# 5 unsigned ints followed by an unsigned long long, all in native sizes.
-	BASIC_FORMAT = "=IIIIIQ"
+	BASIC_FORMAT = "5IQ"
 
 	# The magic number that identifies a cache
 	MAGIC = 0xABCD1237
@@ -151,7 +159,10 @@ class DiskHeader():
 		self.diskvolBlocks,\
 		self.blocks = struct.unpack(self.BASIC_FORMAT, raw_data)
 
+		utils.log("DiskHeader.__init__: Initialized DiskHeader:", self)
+
 		if magic != self.MAGIC:
+			utils.log("DiskHeader.__init__: Bad MAGIC:", magic)
 			raise ValueError("Invalid or corrupt disk header!")
 
 	def __len__(self) -> int:

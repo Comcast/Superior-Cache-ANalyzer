@@ -136,9 +136,8 @@ def numProcs() -> int:
 	return len(psutil.pids())
 
 if __debug__:
-	from os import isatty
 
-	if isatty(sys.stderr.fileno()):
+	if os.isatty(sys.stderr.fileno()):
 		messageTemplate = "\033[38;2;174;129;255mDEBUG: %s\033[0m\n"
 	else:
 		messageTemplate = "DEBUG: %s\n"
