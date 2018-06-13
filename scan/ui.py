@@ -521,7 +521,7 @@ def breakDownDump(spanFile: str = None):
 	print("%TYAML\n---")
 	try:
 		for s in spans:
-			print(s, ':\n\t', sep='')
+			print(s, ':\n\t', sep='', end='')
 			print(spanUsageByHost(spans[s]).replace('\n', "\n\t"))
 	except KeyboardInterrupt:
 		print("Warning, job terminated early! Quitting...", file=sys.stderr)
