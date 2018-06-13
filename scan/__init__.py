@@ -112,6 +112,8 @@ def main() -> int:
 	from . import config
 	from . import utils
 
+	utils.log("main: Starting scan version", __version__, "with args:", args)
+
 	if args.fips:
 		config.FIPS = True
 
