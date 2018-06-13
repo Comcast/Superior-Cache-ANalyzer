@@ -71,8 +71,8 @@ sudo python3 setup.py install
 The basic usage of `scan` is pretty simple at the moment; to start the utility simply run:
 
 ```bash
-scan [ --debug ] [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ]
-scan [ --debug ] [ -f --fips ] [ -D --dump-breakdown [ SPAN ] ] [ -c --config-dir DIR ]
+scan [ --debug ] [ -f --fips ] [ -d --dump [ SPAN ] ] [ -c --config-dir DIR ] [ --tgm ]
+scan [ --debug ] [ -f --fips ] [ -D --dump-breakdown [ SPAN ] ] [ -c --config-dir DIR ] [ --tgm ]
 ```
 
 where the options have the following meanings:
@@ -100,6 +100,10 @@ where the options have the following meanings:
 * `-l` or `--loadavg` `LOADAVG`
 
 	This flag allows the specification of a maximum system load average to be respected by the program. This is expected to be a comma-separated list of floating-point numbers (see [`man uptime`](https://linux.die.net/man/1/uptime)). For example: `scan -l "25.0, 25.0, 25.0"` ensures that no more than 25 processes will be waiting for CPU time or disk I/O on average ever 1, 5 or 15 minutes. Note that this option assumes that the system's loadavg at the time `scan` starts is representative of the system's loadavg for the entirety of its execution; if you start a very long scan job on e.g. a 1TB span, and then decide to play Crisis 1 on Medium settings using integrated graphics, your system may very well exceed a specified maximum loadavg, through no fault of `scan` itself. Note that if your system is already at or above the `LOADAVG` specified, `scan` will immediately exit as it cannot possibly run. (Implementation note: effectively this controls the number of sub-processes that can be used to scan a stripe at once, since each sub-process is potentially another process that will wait for CPU time or Disk I/O.) Note that this is only available on POSIX-compliant systems. Usage of this flag alongside `-d` or `--dump` is discouraged.
+
+* `--tgm`
+
+	Toggles 'God Mode'. When passed on the command line, scan will not set its ionice level, and will ignore any `-l`/`--loadavg` flags provided. Using this can slow down your system, and may even have a non-negligible impact on running Apache Traffic Server instances.
 
 * `-V` or `--version`
 

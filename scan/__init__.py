@@ -18,7 +18,7 @@ Analyzes Apache Traffic Server on-disk caches
 """
 import sys
 
-__version__ = "3.3.1"
+__version__ = "3.3.2"
 
 __author__ = "Brennan W. Fieck"
 
@@ -73,6 +73,12 @@ def main() -> int:
 	                    const=True,
 	                    default=False)
 
+	parser.add_argument("--tgm",
+	                    help="'Toggle God Mode' removes loadavg and ionice limitations.",
+	                    action="store_const",
+	                    const=True,
+	                    default=False)
+
 	parser.add_argument("-V",
 	                    "--version",
 	                    help="Prints version information and exits",
@@ -109,7 +115,7 @@ def main() -> int:
 	if args.fips:
 		config.FIPS = True
 
-	if args.loadavg:
+	if args.loadavg and not args.tgm:
 		try:
 			currentLoadAvg = config.setLoadAvg(args.loadavg)
 			if currentLoadAvg is not None:
@@ -126,7 +132,7 @@ def main() -> int:
 
 	# If loadavg is specified, we don't need to do this, because the assumption is that every process
 	# could wait forever for I/O
-	else:
+	elif not args.tgm:
 		# Portable way to set our i/o priority to the lowest possible
 		# That way it won't interfere with actual ATS cache read/writes
 		import os
