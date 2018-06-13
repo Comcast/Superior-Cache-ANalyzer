@@ -745,7 +745,7 @@ class Stripe():
 		                      > 0]
 
 		# Sometimes, nothing is cached
-		if not heads:
+		if not heads.any():
 			return
 
 		if self.phase:
