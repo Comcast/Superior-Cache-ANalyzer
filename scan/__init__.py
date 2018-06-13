@@ -60,6 +60,13 @@ def main() -> int:
 	                    type=str,
 	                    default=False)
 
+	parser.add_argument("-D",
+	                    "--dump-breakdown",
+	                    help="Dump cache usage statistics broken down by host and exit.",
+	                    nargs='?',
+	                    type=str,
+	                    default=False)
+
 	parser.add_argument("--debug",
 	                    help="Logs debug output to stderr.",
 	                    action="store_const",
@@ -85,9 +92,19 @@ def main() -> int:
 		# force optimization (will set __debug__ = False)
 		from os import execl
 		execl(sys.executable, sys.executable, '-OO', *sys.argv)
+	elif __debug__:
+		from traceback import format_exc
+		def f_exc() -> str:
+			"""
+			Formats an exception stack trace for debug output
+			"""
+			return format_exc().replace('\n', "\nDEBUG:\t")
+	else:
+		f_exc = lambda: ''
 
 	from . import ui
 	from . import config
+	from . import utils
 
 	if args.fips:
 		config.FIPS = True
@@ -118,46 +135,68 @@ def main() -> int:
 			p = psutil.Process(os.getpid())
 			p.ionice(psutil.IOPRIO_CLASS_IDLE)
 		except ValueError:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log(f_exc())
 			p.ionice(0) # Windows > Vista
 		except (OSError, AttributeError) as e:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log(f_exc())
 			# either not Linux kernel v > 2.16.3+ or we're on BSD/OSX
 			print("WARNING: ionice not supported on your system. May cause heavy I/O load!",
 			      file=sys.stderr)
 			print("(Info: %s)" % e, file=sys.stderr)
 
+	confDir = args.config_dir if args.config_dir else "/opt/trafficserver/etc/trafficserver"
+
+	# Dump usage of all spans
 	if args.dump is None:
-		confDir = args.config_dir if args.config_dir else "/opt/trafficserver/etc/trafficserver"
 		try:
-			config.init(config_dir)
+			config.init(confDir)
 			ui.nonInteractiveDump()
 		except (OSError, FileNotFoundError, ValueError) as e:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log(f_exc())
 			print("Unable to scan cache: '%s'" % e, file=sys.stderr)
 			return 1
 		return 0
+
+	# Dump usage of a single span
 	elif args.dump:
-		confDir = args.config_dir if args.config_dir else "/opt/trafficserver/etc/trafficserver"
-		config.init(confDir)
+		try:
+			config.init(confDir)
+			return ui.dumpSingleSpan(args.dump)
+		except (OSError, FileNotFoundError, IOError, ValueError) as e:
+			utils.log(f_exc())
+			print("Unable to scan cache '%s': '%s'" % (args.dump, e), file=sys.stderr)
+			return 1
 
-		return ui.dumpSingleSpan(args.dump)
+	# Dump usage breakdown of all spans
+	if args.dump_breakdown is None:
+		try:
+			config.init(confDir)
+			ui.breakDownDump()
+		except (OSError, FileNotFoundError, IOError, ValueError) as e:
+			utils.log(f_exc())
+			print("Unable to scan cache: '%s'" % (e,), file=sys.stderr)
+			return 1
+		return 0
+
+	# Dump usage breakdown of a single span
+	elif args.dump_breakdown:
+		try:
+			config.init(confDir)
+			ui.breakDownDump(args.dump_breakdown)
+		except (OSError, FileNotFoundError, IOError, ValueError) as e:
+			utils.log(f_exc())
+			print("Unable to scan cache '%s': '%s'" % (args.dump_breakdown, e), file=sys.stderr)
+			return 1
+		return 0
 
 
+	# Default; interactive mode
 	try:
 		if args.config_dir:
-			ui.mainmenu(args.config_dir)
+			ui.mainmenu(confDir)
 		else:
 			ui.mainmenu()
 	except (KeyboardInterrupt, EOFError):
-		if __debug__:
-			from traceback import print_exc
-			print_exc(file=sys.stderr)
+		utils.log(f_exc())
 		print()
 	return 0
