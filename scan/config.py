@@ -419,7 +419,7 @@ def volumes() -> typing.Dict[int, Volume]:
 
 def spans() -> typing.Dict[str, Cache]:
 	"""
-	Returns an index-able reference to the storage configuration
+	Returns an index-able, sorted reference to the storage configuration
 
 	This function will initialize all of the spans specified,
 	if they have not already been initialized.
@@ -445,7 +445,7 @@ def spans() -> typing.Dict[str, Cache]:
 
 			STORAGE_CONFIG[file] = (cache[0], span.Span(cache[1]))
 
-	return STORAGE_CONFIG
+	return {f: (sz, sp) for f,(sz,sp) in sorted(STORAGE_CONFIG.items(), key=lambda x: x[0])}
 
 def settings() -> Settings:
 	"""
