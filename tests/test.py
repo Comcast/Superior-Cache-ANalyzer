@@ -31,7 +31,7 @@ except ImportError as e:
 	print("Tests should be run from the project's root directory (or while it's installed)! (%s)" % e, file=sys.stderr)
 	exit(1)
 
-DISK_HEADER_SIZE = struct.calcsize("=5IQ")
+DISK_HEADER_SIZE = struct.calcsize("5IQ")
 SPAN_BLOCK_HEADER_SIZE = struct.calcsize("4IiII")
 SPAN_BLOCK_HEADER_LENGTH = 0x4000 * utils.STORE_BLOCK_SIZE
 

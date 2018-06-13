@@ -28,10 +28,6 @@ import psutil
 ###                                                  ###
 ########################################################
 
-# The size of a double word on this architecture.
-# The type it's actually tring to represent is uint64\_t
-UNSIGNED_LONG_LONG_SIZE = struct.calcsize("Q")
-
 # The size of a pointer. Usually the same as `UNSIGNED_LONG_LONG_SIZE`.
 POINTER_SIZE = struct.calcsize("P")
 
@@ -69,27 +65,6 @@ class CacheType(enum.IntEnum):
 ###                   FUNCTIONS                      ###
 ###                                                  ###
 ########################################################
-
-def unpacklong(raw: bytes) -> int:
-	"""
-	Unpacks and returns an unsigned long long from the 'raw' data
-
-	For some reason, the offset and length for DiskVolBlock information structs in DiskHeaders
-	are written by first splitting them into high and low 32 bits, and writing each of these to
-	disk. The upshot is that each 32 bits is written in the native byte order, but the double-word
-	that represents the whole value is written high bits first then low bits, as though it were
-	Big-Endian regardless of the host architecture's byte order.
-
-	Raises a ValueError if 'raw' is not of type 'bytes' or doesn't appear to represent a `long`.
-	"""
-	try:
-		upper, lower = struct.unpack("II", raw)
-	except struct.error as e:
-		if __debug__:
-			from traceback import print_exc
-			print_exc(file=sys.stderr)
-		raise ValueError("Couldn't convert '%r' to 'long': %s" % (raw, e))
-	return ((16**8) * upper) + lower
 
 def fileSize(fname: str) -> int:
 	"""
@@ -149,7 +124,6 @@ if __debug__:
 		sys.stderr.write(messageTemplate % (' '.join(output),))
 
 	log("'utils' module: Loaded")
-	log("\t\tUNSIGNED_LONG_LONG_SIZE:", UNSIGNED_LONG_LONG_SIZE)
 	log("\t\tPOINTER_SIZE:", POINTER_SIZE)
 else:
 	def log(*unused_args):

@@ -79,13 +79,7 @@ class SpanBlockHeader():
 		Type,\
 		free = struct.unpack(self.BASIC_FORMAT, raw_data)
 
-		# self.offset = utils.unpacklong(offset)
 
-		# The '+2' here is necessary to make this into an actual
-		# multiple of 128MB, which indicates to me that something's
-		# either wrong with 'unpacklong' (unlikely since other things work)
-		# or with the BASIC_FORMAT unpacking I'm doing here.
-		# self.length = utils.unpacklong(length)
 		self.Type = utils.CacheType(Type)
 		self.free = bool(free)
 
