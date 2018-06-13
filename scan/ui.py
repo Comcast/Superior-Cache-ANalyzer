@@ -511,11 +511,21 @@ def breakDownDump(spanFile: str = None):
 		utils.log("ui.breakDownDump: Dumping usage breakdown for", spanFile)
 		if spanFile not in spans:
 			print("Error: '%s' is not a cache span!" % (spanFile,), file=sys.stderr)
-			return 2
+			return 1
 		print("%TYAML 1.1\n---")
 		print(spanUsageByHost(spans[spanFile]))
 		return 0
-	print("Not Implemented")
+
+	utils.log("ui.breakDownDump: Dumping usage breakdown for entire cache")
+
+	print("%TYAML\n---")
+	try:
+		for s in spans:
+			print(s, ':\n\t', sep='')
+			print(spanUsageByHost(spans[s]).replace('\n', "\n\t"))
+	except KeyboardInterrupt:
+		print("Warning, job terminated early! Quitting...", file=sys.stderr)
+		return 2
 	return 0
 
 
