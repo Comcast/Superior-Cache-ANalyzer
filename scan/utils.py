@@ -111,6 +111,7 @@ def numProcs() -> int:
 	return len(psutil.pids())
 
 if __debug__:
+	from traceback import format_exc
 
 	if os.isatty(sys.stderr.fileno()):
 		messageTemplate = "\033[38;2;174;129;255mDEBUG: %s\033[0m\n"
@@ -123,14 +124,26 @@ if __debug__:
 		output = tuple(repr(arg) if not isinstance(arg, str) else arg for arg in args)
 		sys.stderr.write(messageTemplate % (' '.join(output),))
 
+	def log_exc(desc: str):
+		"""
+		Logs an exception with a description
+		"""
+		log(desc, format_exc().replace('\n', "\nDEBUG:\t"))
+
 	log("'utils' module: Loaded")
 	log("\t\tPOINTER_SIZE:", POINTER_SIZE)
 else:
 	def log(*unused_args):
 		"""
-		dummy function to which 'log' gets set if debug isn't enabled
+		dummy function to which 'log' gets set if debugging isn't enabled
+		"""
+		pass
+	def log_exc(unused_desc):
+		"""
+		dummy function to which `log_exc` gets set if debugging isn't enabled
 		"""
 		pass
 
-# This may seem dumb, but it's necessary to allow importing it.
+# This may seem dumb, but it's necessary to allow importing
 log = log
+log_exc = log_exc

@@ -42,21 +42,30 @@ class Span():
 			try:
 				self.header = DiskHeader(spanFile.read(DiskHeader.sizeof))
 			except ValueError:
-				if __debug__:
-					from traceback import print_exc
-					print_exc(file=sys.stderr)
-				raise ValueError("%s does not appear to be a valid ATS cache!" % file)
+				utils.log_exc("Span.__init__:")
+				raise ValueError("%s does not appear to be a valid ATS cache!" % (file,))
 
-			for spanblockNum in range(self.header.diskvolBlocks):
-				spanblock = spanFile.read(stripe.SpanBlockHeader.sizeof)
+			sbhHeaderFormat = stripe.SpanBlockHeader.BASIC_FORMAT*self.header.diskvolBlocks
+			buffer = bytearray(struct.calcsize(sbhHeaderFormat))
+
+			try:
+				spanFile.readinto(buffer)
+			except (OSError, IOError) as e:
+				utils.log_exc("Span.__init__:")
+				print("Error reading span file '%s': '%s'", file, e)
+
+			try:
+				spanBlockHeaders = struct.unpack(sbhHeaderFormat, buffer)
+			except struct.error as e:
+				utils.log_exc("Span.__init__:")
+				raise ValueError("Malformed DiskHeader object in cache file '%s'" % (file,))
+
+			for spanBlockHeader in range(0, len(spanBlockHeaders), 5):
 				try:
-					spanblock = stripe.Stripe(spanblock, file)
+					spanblock = stripe.Stripe(spanBlockHeader, file)
 				except ValueError:
-					if __debug__:
-						from traceback import print_exc
-						print_exc(file=sys.stderr)
-					fmt = "span header #%d seems to declare an invalid span!"
-					print(fmt % (spanblockNum + 1), file=sys.stderr)
+					utils.log_exc("Span.__init__: stripe construction:")
+					print("stripe header seems to declare an invalid stripe!", file=sys.stderr)
 				else:
 					spanblock.read()
 					self.blocks.append(spanblock)

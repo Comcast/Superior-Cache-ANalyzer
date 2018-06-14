@@ -66,22 +66,34 @@ class SpanBlockHeader():
 	########################################################
 
 
-	def __init__(self, raw_data: bytes):
+	def __init__(self, raw_data: typing.Union[bytes, typing.Tuple[int,int,int,int,int]]):
 		"""
 		Initializes the header
 
 		raw_data: bytes -- The raw header data.
 		raises: struct.error -- if unpacking fails.
 		"""
-		self.offset,\
-		self.length,\
-		self.number,\
-		Type,\
-		free = struct.unpack(self.BASIC_FORMAT, raw_data)
+		utils.log("SpanBlockHeader.__init__: raw_data:", raw_data)
+		if isinstance(raw_data, bytes):
+			self.offset,\
+			self.length,\
+			self.number,\
+			Type,\
+			free = struct.unpack(self.BASIC_FORMAT, raw_data)
 
+			self.Type = utils.CacheType(Type)
+			self.free = bool(free)
 
-		self.Type = utils.CacheType(Type)
-		self.free = bool(free)
+		# This assumes that raw_data is a tuple of 5 integers.
+		else:
+			self.offset,\
+			self.length,\
+			self.number,\
+			Type,\
+			self.free = raw_data
+
+			self.Type = utils.CacheType(Type)
+
 
 		# This currently isn't working (it's off by 2 and idk why)
 		# if self.length % self.VOL_BLOCK_SIZE:
@@ -255,13 +267,15 @@ class Stripe():
 	###                                                  ###
 	########################################################
 
-	def __init__(self, raw_header: bytes, file: str):
+	def __init__(self, raw_header:typing.Union[bytes, typing.Tuple[int,int,int,int,int]], file:str):
 		"""
 		Constructs the stripe header from the data provided in 'raw_header'.
 
 		Note that the free-list, directory and footer should be omitted.
 		"""
+		utils.log("Stripe.__init__: raw_header:", raw_header)
 		self.spanBlockHeader = SpanBlockHeader(raw_header)
+		utils.log("Stripe.__init__: spanBlockHeader:", self.spanBlockHeader)
 
 		# holds the file of this stripe to avoid referencing the span on every read
 		self.file = file
