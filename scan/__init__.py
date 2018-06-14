@@ -18,7 +18,7 @@ Analyzes Apache Traffic Server on-disk caches
 """
 import sys
 
-__version__ = "3.3.2"
+__version__ = "3.3.3"
 
 __author__ = "Brennan W. Fieck"
 
