@@ -16,16 +16,21 @@
 Provides a simple User Interface for the scanner.
 """
 
-# `readline` doesn't work on Windows...
-#pylint: disable=E0401
-import readline
-import glob
-#pylint: enable=E0401
 import typing
 import sys
 import re
 import os
-# from . import blocks
+try:
+	import readline
+except ImportError:
+	try:
+		import pyreadline as readline
+	except ImportError:
+		print("Scan was not properly installed on your system!", file=sys.stderr)
+		print("Please see the install instructions and/or file an issue at"\
+		      " https://github.com/Comcast/Superior-Cache-ANalyzer", file=sys.stderr)
+import glob
+
 from . import config, utils
 
 # ANSI control sequence that clears the screen

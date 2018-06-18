@@ -19,8 +19,14 @@ Setup script for S.C.AN.
 """
 
 import os
+from platform import system
 from setuptools import setup, find_packages
 from scan import __version__ as scanv
+
+rldep = 'readline'
+if system() == 'Windows':
+	# Fallback dependency for Windows environment
+	rldep = 'pyreadline'
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as f:
@@ -58,7 +64,7 @@ setup(
 	],
 	keywords='Apache traffic server ats cache analysis',
 	packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-	install_requires=['setuptools', 'typing', 'readline', 'numpy', 'psutil'],
+	install_requires=['setuptools', 'typing', rldep, 'numpy', 'psutil'],
 	entry_points={
 		'console_scripts': [
 			'scan=scan.__init__:main',
