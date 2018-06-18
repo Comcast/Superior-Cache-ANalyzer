@@ -100,16 +100,13 @@ def loadConfig(confDir: str):
 	try:
 		config.init(confDir)
 	except FileNotFoundError as e:
-		from traceback import format_exc
-		utils.log(format_exc())
+		utils.log_exc("ui.loadConfig:")
 		print("Configuration could not be read!\n%s\n" % e, file=sys.stderr)
 	except ValueError as e:
-		from traceback import format_exc
-		utils.log(format_exc())
+		utils.log_exc("ui.loadConfig:")
 		print("Error reading configuration file: %s" % e, file=sys.stderr)
 	except OSError as e:
-		from traceback import format_exc
-		utils.log(format_exc())
+		utils.log_exc("ui.loadConfig:")
 		print("Error in config file - cache not found: %s" % e, file=sys.stderr)
 	else:
 		del MENU_ENTRIES[0]
@@ -144,19 +141,13 @@ def getConfig():
 		try:
 			config.init(choice)
 		except FileNotFoundError as e:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("ui.getConfig:")
 			print("Configuration could not be read!\n%s\n" % e, file=sys.stderr)
 		except ValueError as e:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("ui.getConfig:")
 			print("Error reading configuration file: %s" % e, file=sys.stderr)
 		except OSError as e:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("ui.getConfig:")
 			print("Error in config file - cache not found: %s" % e, file=sys.stderr)
 		else:
 			del MENU_ENTRIES[0]
@@ -415,14 +406,10 @@ def dumpUsageToFile():
 						print(CLEAR)
 				return "Done!"
 			except OSError as e:
-				if __debug__:
-					from traceback import print_exc
-					print_exc(file=sys.stderr)
+				utils.log_exc("ui.dumpUsageToFile:")
 				print("Could not write to '%s'! (%s)" % (choice, e), file=sys.stderr)
 			except ValueError as e:
-				if __debug__:
-					from traceback import print_exc
-					print_exc(file=sys.stderr)
+				utils.log_exc("ui.dumpUsageToFile:")
 				print("Error!:", e, file=sys.stderr)
 
 def nonInteractiveDump():
@@ -573,7 +560,5 @@ def mainmenu(confDir: str = None):
 			else:
 				raise ValueError()
 		except ValueError:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("ui.mainmenu:")
 			print("Please enter a valid option number")

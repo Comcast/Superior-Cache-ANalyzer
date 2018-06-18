@@ -111,6 +111,7 @@ class HDRHeap():
 		try:
 			raw = struct.unpack(type(self).BASIC_FORMAT(), raw)
 		except struct.error as e:
+			utils.log_exc("HDRHeap.__init__:")
 			raise ValueError("Data not compatible with a HDRHeap! (%s)" % e)
 
 		if raw[0] != self.MAGIC:
@@ -443,7 +444,7 @@ class Alternate():
 		self.magic = basicData[0]
 		if self.magic != self.__class__.MAGIC:
 			if self.magic == self.__class__.MAGIC_ALIVE:
-				print("Doc Alternat not marshalled (?!?!)", file=sys.stderr)
+				print("Doc Alternate not marshalled (?!?!)", file=sys.stderr)
 			elif self.magic == self.__class__.MAGIC_DEAD:
 				print("Doc Alternate is dead... ?", file=sys.stderr)
 			else:
@@ -508,9 +509,7 @@ class Alternate():
 		try:
 			beginning = self.requestHeaders[::-1].index('ptth') + 4
 		except (IndexError, TypeError):
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("Alternate.requestURL:")
 			return "Unknown"
 
 		return self.requestHeaders[-beginning:]
@@ -581,10 +580,8 @@ class Alternate():
 			try:
 				latest.fragmentOffsets = struct.unpack("%dP" % numFrags, raw[cls.sizeof:fragTblSize])
 			except struct.error:
-				if __debug__:
-					from traceback import print_exc
-					print_exc(file=sys.stderr)
-				assert not print("Warning! Fragment table construction error! Bailing...", file=sys.stderr)
+				utils.log("Alternate.fromBuffer: Fragment table construction error! Bailing...")
+				utils.log_exc("Alternate.fromBuffer:")
 				return current
 
 		totalOffset = cls.sizeof + fragTblSize
@@ -633,9 +630,7 @@ class Alternate():
 		try:
 			latest.responseHeaders = responseHeaders.decode()
 		except UnicodeError:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("Alternate.fromBuffer:")
 			latest.responseHeaders = responseHeaders
 
 		if theEnd < 0:
@@ -674,16 +669,14 @@ def unpackHeap(heap: bytes, offset: int, size: int, http: HTTPHdr) -> \
 
 
 			offset = utils.align(offset + newHdrObj.length, utils.POINTER_SIZE)
-		except (struct.error, UnicodeError) as e:
-			assert not print("\n***DEBUG***",
-				             e,
-				             newHdrObj,
-				             offset,
-				             size,
-				             http,
-				             ret,
-				             sep='\n',
-				             file=sys.stderr)
+		except (struct.error, UnicodeError):
+			utils.log("http.unpackHeap: An error occurred processing -")
+			utils.log("\tnewHdrObj:", newHdrObj)
+			utils.log("\toffset:", offset)
+			utils.log("\tsize:", size)
+			utils.log("\thttp:", http)
+			utils.log("\tret:", ret)
+			utils.log_exc("http.unpackHeap:")
 			return ret
 
 	return ret

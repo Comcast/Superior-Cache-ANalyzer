@@ -28,8 +28,6 @@ from . import directory, utils
 #from . import config
 #endif
 
-if __debug__:
-	import sys
 
 class SpanBlockHeader():
 	"""
@@ -252,7 +250,8 @@ class Stripe():
 						doc.setInfo(buffer[directory.Doc.sizeof : doc.hlen])
 						doc.setData(buffer[directory.Doc.sizeof + doc.hlen : len(doc)])
 					except struct.error as e:
-						assert not print("Error reading doc pointed to by %s : '%s'" % (d, e), file=sys.stderr)
+						utils.log("Stripe.firstDocs: Error reading doc pointed to by", d,":", e)
+						utils.log_exc("Stripe.firstDocs:")
 						pass
 					else:
 						yield doc
@@ -431,7 +430,7 @@ class Stripe():
 
 		magic = data[0]
 		if magic != self.MAGIC:
-			utils.log("Bad MAGIC Value:", hex(magic))
+			utils.log("Stripe.read: Bad MAGIC Value:", hex(magic))
 			raise ValueError("Stripe does not appear to valid!")
 
 		self.version      = "%d.%d" % (data[1], data[2])
@@ -454,7 +453,7 @@ class Stripe():
 			self.validityLimit += self.writeCursor
 		self.validityLimit //= 0x200
 
-		utils.log("Finished reading metadata for", self)
+		utils.log("Stripe.read: Finished reading metadata for", self)
 
 	def readDir(self):
 		"""
@@ -472,7 +471,6 @@ class Stripe():
 			                             dtype=directory.npDirEntry,
 			                             count=self.numDirEntries).view(dtype='u2')\
 			                                                      .reshape(self.numDirEntries, 5)
-
 
 	def getSegment(self, index: int) -> directory.Segment:
 		"""
@@ -546,18 +544,17 @@ class Stripe():
 			try:
 				dirent = self.directory[arg0, arg1, arg2]
 			except IndexError:
-				if __debug__:
-					raise
+				utils.log_exc("Stripe.fetch:")
 				return None
 		else:
+			utils.log("Stripe.fetch: Bad arguments:", self, arg0, arg1, arg2)
 			raise TypeError("'stripe.fetch' expects either one DirEntry or three integers!")
 
 
 		# If the dirent isn't valid, we're already done
 		if not dirent:
-			if __debug__:
-				raise ValueError("Directory Entry specified by (%d, %d, %d) is not valid!"\
-				                 "\n(Offending DirEntry: %r)" % (arg0, arg1, arg2, dirent))
+			utils.log("Stripe.fetch: Directory Entry specified by", arg0, arg1, arg2, "is not valid!")
+			utils.log("Stripe.fetch: (Offending DirEntry: %r)" % (dirent,))
 			return None
 
 
@@ -570,9 +567,7 @@ class Stripe():
 
 		newDoc = directory.Doc.from_buffer(docbuff[:directory.Doc.sizeof])
 		if newDoc.magic != directory.Doc.MAGIC:
-			if __debug__:
-				raise ValueError("DirEntry does not appear to point to a valid Doc!"\
-				                 " (%r -> %r)" % (arg0, newDoc))
+			utils.log("Stripe.fetch: DirEntry does not point to a valid Doc! (",arg0,"->",newDoc,")")
 			return None
 
 		newDoc.setInfo(docbuff[directory.Doc.sizeof:newDoc.hlen])
@@ -613,9 +608,7 @@ class Stripe():
 		try:
 			doc = directory.Doc.from_buffer(dhead)
 		except ValueError:
-			if __debug__:
-				from traceback import print_exc
-				print_exc(file=sys.stderr)
+			utils.log_exc("Stripe.fetchWithFile:")
 			return None
 		finally:
 			# restore stream position
@@ -688,10 +681,9 @@ class Stripe():
 		fd = io.open(self.file, 'rb')
 		ds, dm, cm = directory.Doc.sizeof, directory.Doc.MAGIC, directory.Doc.CORRUPT_MAGIC
 		try:
-			coffset = self.contentOffset
 			for d in dirPart:
 				docbuff = bytearray(directory.dirSize(d))
-				fd.seek(coffset + directory.dirOffset(d))
+				fd.seek(self.contentOffset + directory.dirOffset(d))
 				fd.readinto(docbuff)
 
 				doc = directory.Doc.from_buffer(docbuff[:ds])
@@ -701,19 +693,15 @@ class Stripe():
 						doc.setInfo(docbuff[ds : doc.hlen])
 						doc.setData(docbuff[ds + doc.hlen : len(doc)])
 					except struct.error as e:
-						if __debug__:
-							from traceback import print_exc
-							print("Error reading doc pointed to by %s : '%s'" % (d, e), file=sys.stderr)
-							print_exc(file=sys.stderr)
+						utils.log("Stripe.parallelObjs: Error reading doc pointed to by", d, ':', e)
+						utils.log_exc("Stripe.parallelObjs:")
 					else:
 						sz = doc.totalLength
 						for a in doc.alternates:
 							url = a.requestURL()
 							q.put((url, sz))
-				elif __debug__ and doc.magic == cm:
-					from traceback import print_exc
-					print("Corrupt Doc pointed to by %s: '%s'" % (d, doc), file=sys.stderr)
-					print_exc(file=sys.stderr)
+				elif doc.magic == cm:
+					utils.log("Stripe.parallelObjs: Corrupt Doc pointed to by", d, ':', doc)
 		finally:
 			fd.close()
 			q.put(None)
