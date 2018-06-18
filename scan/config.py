@@ -70,7 +70,7 @@ def INK_MD5_SIZE() -> int:
 	global FIPS
 	sz = 32 if FIPS else 16
 	utils.log("INK_MD5_SIZE:", sz)
-	return 32 if FIPS else 16
+	return sz
 
 def setLoadAvg(loadavg: str) -> typing.Optional[Loadavg]:
 	"""

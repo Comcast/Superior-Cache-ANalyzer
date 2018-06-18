@@ -391,7 +391,7 @@ class Doc(ctypes.Structure):
 		"""
 		Fetches the urls associated with this `Doc`'s `Alternate`s.
 		"""
-		utils.log("Doc.urls: returning utils for", self)
+		utils.log("Doc.urls: returning urls for", self)
 		return [a.requestURL() for a in self.alternates]
 
 	def __len__(self) -> int:
