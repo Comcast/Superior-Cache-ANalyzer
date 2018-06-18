@@ -191,6 +191,41 @@ def totalCacheSizeAvailable() -> int:
 
 	return sum(cache[0] for cache in STORAGE_CONFIG.values())
 
+def parseRecordConfig(contents: str) -> Settings:
+	"""
+	Parses the contents of a records.config file and returns the contained settings
+	"""
+	lines = contents.strip().split('\n')
+
+	ret = {}
+	for line in lines:
+		line = line.strip()
+
+		if line and line.startswith("CONFIG"):
+			utils.log("config.parseRecordConfig: config line:", line)
+
+			name, Type, value = [field for field in line.split(' ')[1:] if field]
+
+			if name in ret:
+				utils.log("config.parseRecordConfig: Double-definition of", name)
+
+			# A decimal or hexidecimal integer
+			if Type == "INT":
+				# hex
+				if value.startswith("0x"):
+					value = int(value[2:], base=16)
+				elif value.endswith('h'):
+					value = int(value[:-1], base=16)
+				# decimal
+				else:
+					value = int(value)
+			elif Type == "FLOAT":
+				value = float(value)
+
+			ret[name] = value
+
+	return ret
+
 def readRecordConfig() -> int:
 	"""
 	Reads in the configuration options from the 'records.config' file
@@ -211,7 +246,7 @@ def readRecordConfig() -> int:
 
 	# Read in the file as a list of lines, ignoring leading or trailing newlines
 	with open(fname) as file:
-		lines = file.read().strip().split('\n')
+		contents = file.read()
 
 
 	# Clean out lines that are comments or only whitespace
@@ -220,42 +255,56 @@ def readRecordConfig() -> int:
 	# Counts read values (can't just use `len(lines)` in case more than one file is read)
 	num = 0
 
-	for line in lines:
+	records = parseRecordConfig(contents)
 
-		line = line.strip()
+	RECORDS_CONFIG.update(records)
 
-		# Valid configuration lines begin with 'CONFIG'
-		if line and line.startswith('CONFIG'):
-			utils.log("readRecordConfig: config line:", line)
+	return len(records)
 
-			# reads in the space-separated parts of the config, ignoring extra whitespace
-			# and throwing away the starting 'CONFIG'
-			fields = [field for field in line.split(' ')[1:] if field]
+def parseStorageConfig(contents: str) -> typing.Dict[str, Cache]:
+	"""
+	Parses the contents of a 'storage.config' file and returns a dictionary of cache file
+	names to cache objects.
+	"""
+	global PATH
 
-			# Warn but don't fail when settings are redefined - keep most recent definition
-			if fields[0] in RECORDS_CONFIG:
-				print("WARNING: Redefinition of configuration option: %s" % fields[0])
+	contents, ret = contents.strip().split('\n'), {}
 
-			# Convert values to the correct type
-			# (currently I only know of 'INT', 'FLOAT', and 'STRING' types)
-			if fields[1] == 'INT':
-				if fields[2].startswith('0x') or fields[2].endswith('h'):
-					value = int(fields[2][2:], base=16)
-				else:
-					value = int(fields[2])
-			elif fields[1] == 'FLOAT':
-				value = float(fields[2])
-			else:
-				value = fields[2]
+	for i,line in enumerate(contents):
+		cache = line.strip()
 
-			# Place the value into the configuration.
-			# This ignores the 'proxy.config.' that is prepended to every setting
-			# (to save a little space)
-			RECORDS_CONFIG[fields[0][13:]] = value
+		if cache.startswith('#'):
+			continue
 
-			num += 1
+		# I'm currently ignoring everything except for the cache name, size will be
+		# determined by examining the actual cache file.
+		cache = cache.split(' ')[0]
 
-	return num
+		if os.path.isfile(cache):
+			cache = os.path.abspath(cache)
+		elif os.path.isdir(cache):
+			cache = os.path.join(os.path.abspath(cache), 'cache.db')
+			if not os.path.isfile(cache):
+				raise OSError("line %d '%s' in storage.config specifies a directory "\
+				              "which does not appear to contain a cache file!"%(line,i))
+
+		# TODO: this doesn't work on Windows, should be checking for an alphabetic character
+		# TODO: followed by `:\` on that system (ideally w/o regex)
+		elif not cache.startswith(os.sep):
+			try:
+				sep = PATH.index('etc')
+			except ValueError:
+				utils.log_exc("config.parseStorageConfig:")
+				try:
+					sep = PATH.index('config')
+				except ValueError:
+					utils.log_exc("config.parseStorageConfig:")
+					raise OSError("Couldn't find cache file specified on storage.config line %d '%s'"\
+					                                                                      % (i, line))
+			cache = os.path.abspath(os.path.join(PATH.split('etc')[0], cache))
+		ret[cache] = (utils.fileSize(cache), span.Span(cache))
+
+	return ret
 
 def readStorageConfig() -> int:
 	"""
@@ -275,41 +324,75 @@ def readStorageConfig() -> int:
 
 	# Read in the file as a list of lines, discarding leading or trailing newlines
 	with open(fname) as file:
-		lines = [line.strip().split(' ')[0].strip() for line in file.read().strip().split('\n')]
+		contents = file.read()
 
-	# Obtains the storage file/device name on each non-comment, non-empty line.
-	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
-	for cache in lines:
-		utils.log("readStorageConfig: cache definition:", cache)
+	caches = parseStorageConfig(contents)
 
-		# If this isn't an absolute pathname, it's probably relative to the root of
-		# some ATS install dir. So I try to walk it back by looking above an 'etc'
-		# in the config path.
-		if not cache.startswith('/'):
-			try:
-				_ = PATH.index('etc')
-			except ValueError:
-				if __debug__:
-					from traceback import print_exc
-					from sys import stderr
-					print_exc(file=stderr)
-				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
-				                                                      (fname, cache))
-			cache = os.path.join(PATH.split('etc')[0], cache)
+	STORAGE_CONFIG.update(caches)
 
-		if os.path.isfile(cache):
-			cache = os.path.abspath(cache)
-			utils.log("readStorageConfig: Cache definition is a file, attempting to read", cache)
+	return len(caches)
 
-		elif os.path.isdir(cache):
-			cache = os.path.join(cache, 'cache.db')
-			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
+def parseVolumeConfig(contents: str) -> typing.Dict[int, Volume]:
+	"""
+	Parses the contents of a volume.config file and returns a dict of
+	volume numbers to Volume objects
+	"""
+	global STORAGE_CONFIG
 
-		utils.log("readStorageConfig: Attempting to read cache file -", cache)
+	contents, ret, totalPercent = contents.strip().split('\n'), {}, 0
 
-		STORAGE_CONFIG[cache] = (utils.fileSize(cache), span.Span(cache))
+	for line in contents:
+		line = line.strip()
 
-	return len(lines)
+		if line.startswith('#') or "volume=" not in line:
+			continue
+
+		utils.log("parseVolumeConfig: volume definition:", line)
+
+		position = line.index("volume=")
+		volumeNo = line[position+7:line.index(' ', position)]
+		volumeNo = int(volumeNo)
+
+		if volumeNo in contents:
+			raise ConfigException("Duplicate specifications of volume #%d!" % (volumeNo,))
+
+		position = line.index("size=")
+
+		try:
+			size = line[position+5:line.index(' ', position)]
+		except ValueError:
+			# This likely means the line ends right after the size specification
+			size = line[position+5:]
+
+		size = size.lower() # For size suffixes
+
+		# Now convert sizes to numbers
+		if size.endswith('%'):
+			utils.log("parseVolumeConfig: converting percent-based size in", line, "to absolute size")
+
+			# We can't convert percent-based sizes to absolute sizes
+			# if 'storage.config' has not been read (because we don't know the total)
+			if not STORAGE_CONFIG:
+				raise ConfigException(\
+				    "You cannot allocate %s of a cache with no cache files/devices specified!")
+
+			size = int(size[:-1])
+			totalPercent += size
+			if totalPercent > 100:
+				raise ConfigException("Line '%s' in volume.config causes more than 100%% of space "\
+				                      "to be used!" % (line,))
+
+			size = int(size * totalCacheSizeAvailable() // 100)
+
+		else:
+			size = int(size) * 0x100000
+
+		utils.log("parseVolumeConfig: real size (in Bytes) is", size)
+
+		ret[volumeNo] = (utils.CacheType(1), size) # Currently assuming everything is an HTTP cache
+
+	return ret
+
 
 def readVolumeConfig() -> int:
 	"""
@@ -333,78 +416,13 @@ def readVolumeConfig() -> int:
 
 	# Read in the file as a list of lines, discarding leading or trailing newlines
 	with open(fname) as file:
-		lines = file.read().strip().split('\n')
+		contents = file.read()
 
-	# Discard comments and empty lines, strip away leading and trailing whitespace on each line.
-	lines = [line.strip() for line in lines if line.strip() and not line.strip().startswith('#')]
+	volumeDefinitions = parseVolumeConfig(contents)
 
-	# Keeps track of percent-allocated space.
-	totalPercent = 0
+	VOLUME_CONFIG.update(volumeDefinitions)
 
-	# Keeps track of the number of volumes read
-	num = 0
-
-	for line in lines:
-		utils.log("readVolumeConfig: volume definiton:", line)
-		try:
-			volPos = line.index("volume=")
-		except ValueError:
-			utils.log_exc("config.readVolumeConfig:")
-			# This means this line does not specify a volume
-			continue
-
-		num += 1
-
-		# Parse volume number
-		volumeNumber = int(line[volPos+7:line.index(' ', volPos)])
-		if volumeNumber in VOLUME_CONFIG:
-			raise ConfigException("Duplicates specification of volume #%d!" % volumeNumber)
-
-		# Ignoring this, since only http is oficially supported
-		scheme = utils.CacheType(1)
-
-		# Parse size specification
-		sizePos = line.index("size=")
-		try:
-			size = line[sizePos+5:line.index(' ', sizePos)]
-		except ValueError:
-			utils.log_exc("config.readVolumeConfig:")
-			# This means the line ends immediately after size specification; with no space
-			size = line[sizePos+5:]
-
-		# Now convert sizes to numbers
-		if size.endswith('%'):
-			utils.log("readVolumeConfig: converting percent-based size in", line, "to absolute size")
-
-			# We can't convert percent-based sizes to absolute sizes
-			# if 'storage.config' has not been read
-			if not STORAGE_CONFIG:
-				raise ConfigException(\
-				    "You cannot allocate %s of a cache with no cache files/devices specified!")
-
-			# The percent as a number
-			percentSize = int(size[:-1])
-
-			# You can't allocate more than 100% of the available space
-			totalPercent += percentSize
-			if totalPercent > 100:
-				raise ConfigException(\
-				    "Volume #%d causes more than 100%% of available space to be allocated!"\
-				    % volumeNumber)
-
-			# Calculate absolute size in bytes, rounded down to the nearest VOL_BLOCK_SIZE
-			size = int(size[:-1]) * totalCacheSizeAvailable() // 100
-			size -= size % utils.VOL_BLOCK_SIZE
-
-		# Absolute sizes are specified in MB
-		else:
-			size = int(size) * 0x100000
-
-		utils.log("readVolumeConfig: real size (in Bytes) is", size)
-
-		VOLUME_CONFIG[volumeNumber] = (scheme, size)
-
-	return num
+	return len(volumeDefinitions)
 
 def volumes() -> typing.Dict[int, Volume]:
 	"""
