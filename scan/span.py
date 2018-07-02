@@ -35,7 +35,6 @@ class Span():
 		utils.log("Span: initializing from", file)
 		self.file = file
 		self.blocks = []
-		print("OPENING A SPAN")
 		with open(file, 'rb') as spanFile:
 
 			spanFile.seek(DiskHeader.OFFSET)
