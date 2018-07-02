@@ -161,12 +161,16 @@ class DiskHeader():
 		Raises ValueError if the data does not appear to contain a valid Disk Header.
 		"""
 
-		magic,\
-		self.volumes,\
-		self.free,\
-		self.used,\
-		self.diskvolBlocks,\
-		self.blocks = struct.unpack(self.BASIC_FORMAT, raw_data)
+		try:
+			magic,\
+			self.volumes,\
+			self.free,\
+			self.used,\
+			self.diskvolBlocks,\
+			self.blocks = struct.unpack(self.BASIC_FORMAT, raw_data)
+		except struct.error:
+			utils.log("DiskHeader.__init__: raw_data:", raw_data)
+			utils.log_exc("DiskHeader.__init__:")
 
 		utils.log("DiskHeader.__init__: Initialized DiskHeader:", self)
 
