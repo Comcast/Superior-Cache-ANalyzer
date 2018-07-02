@@ -41,9 +41,9 @@ class Span():
 
 			try:
 				self.header = DiskHeader(spanFile.read(DiskHeader.sizeof))
-			except ValueError:
+			except ValueError as e:
 				utils.log_exc("Span.__init__:")
-				raise ValueError("%s does not appear to be a valid ATS cache!" % (file,))
+				raise ValueError("%s does not appear to be a valid ATS cache! (%s)" % (file, e))
 
 			sbhHeaderFormat = stripe.SpanBlockHeader.BASIC_FORMAT*self.header.diskvolBlocks
 			buffer = bytearray(struct.calcsize(sbhHeaderFormat))
@@ -171,6 +171,7 @@ class DiskHeader():
 		except struct.error:
 			utils.log("DiskHeader.__init__: raw_data:", raw_data)
 			utils.log_exc("DiskHeader.__init__:")
+			raise ValueError("Malformed Disk Header!")
 
 		utils.log("DiskHeader.__init__: Initialized DiskHeader:", self)
 
