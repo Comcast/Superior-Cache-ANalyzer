@@ -281,17 +281,11 @@ def readStorageConfig() -> int:
 	lines = [line.split(' ')[0] for line in lines if line and not line.startswith('#')]
 	for cache in lines:
 		utils.log("readStorageConfig: cache definition:", cache)
-		if os.path.isfile(cache):
-			cache = os.path.abspath(cache)
-
-		elif os.path.isdir(cache):
-			cache = os.path.join(cache, 'cache.db')
-			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
 		# If this isn't an absolute pathname, it's probably relative to the root of
 		# some ATS install dir. So I try to walk it back by looking above an 'etc'
 		# in the config path.
-		elif not cache.startswith('/'):
+		if not cache.startswith('/'):
 			try:
 				_ = PATH.index('etc')
 			except ValueError:
@@ -302,6 +296,14 @@ def readStorageConfig() -> int:
 				raise OSError("Couldn't determine path to file defined in %s: '%s'" %\
 				                                                      (fname, cache))
 			cache = os.path.join(PATH.split('etc')[0], cache)
+
+		if os.path.isfile(cache):
+			cache = os.path.abspath(cache)
+			utils.log("readStorageConfig: Cache definition is a file, attempting to read", cache)
+
+		if os.path.isdir(cache):
+			cache = os.path.join(cache, 'cache.db')
+			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
 		utils.log("readStorageConfig: Attempting to read cache file -", cache)
 
