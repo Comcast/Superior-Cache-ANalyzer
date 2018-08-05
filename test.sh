@@ -22,7 +22,7 @@ if [[ ! -z "$(which git 2>/dev/null)" && ! -z "$(which cc 2>/dev/null)" && ! -z 
 
 		./configure --prefix "$(pwd)/goal" || { echo "'./configure' has failed." >&2; exit 2; }
 
-		make -j || { echo "'make' has failed." >&2; exit 2; }
+		make -j 2 || { echo "'make' has failed." >&2; exit 2; }
 
 		make install || { echo "'make install' has failed." >&2; exit 2; }
 
