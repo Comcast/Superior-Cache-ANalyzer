@@ -301,7 +301,7 @@ def readStorageConfig() -> int:
 			cache = os.path.abspath(cache)
 			utils.log("readStorageConfig: Cache definition is a file, attempting to read", cache)
 
-		if os.path.isdir(cache):
+		elif os.path.isdir(cache):
 			cache = os.path.join(cache, 'cache.db')
 			utils.log("readStorageConfig: Cache definition is a directory, attempting to read", cache)
 
