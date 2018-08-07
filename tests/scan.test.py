@@ -56,7 +56,7 @@ ts.Disk.remap_config.AddLine(
 
 ts.Disk.volume_config.AddLine('volume=1 scheme=http size=100%')
 
-request = 'curl -s -D - -v --ipv4 --http1.1 -H "x-debug: x-cache,via" -H "Host: www.example.com" http://localhost:{port}/'.format(port=ts.Variables.port)
+request = 'curl -s -D - -v --ipv4 -H "x-debug: x-cache,via" -H "Host: www.example.com" http://localhost:{port}/'.format(port=ts.Variables.port)
 
 # Test 1 - 200 response and cache fill
 tr = Test.AddTestRun()
