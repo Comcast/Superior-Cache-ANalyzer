@@ -194,12 +194,5 @@ class DiskHeader():
 		ret = "DiskHeader(volumes=%d, free=%d, used=%d, diskvol_blocks=%d, blocks=%d)"
 		return ret % (self.volumes, self.free, self.used, self.diskvolBlocks, self.blocks)
 
-	# @classmethod
-	# def sizeof(cls) -> int:
-	# 	"""
-	# 	Returns the size (in bytes) of this object, as stored in the cache
-	# 	"""
-	# 	return struct.calcsize(cls.BASIC_FORMAT)
-
 utils.log("'span' module: Loaded")
 utils.log("\t\tDiskHeader size:", DiskHeader.sizeof)
