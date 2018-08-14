@@ -49,10 +49,9 @@ class SpanBlockHeader():
 
 	# The format of a span block header:
 	# two unsigned long longs, one signed int, and two unsigned ints
-	BASIC_FORMAT = "QQiII"
-	# those last two 'I's are bitfields, but the data I've
-	# been looking at seems to align these across 4-byte boundaries, which
-	# effectively makes them each their own unsigned ints.
+	BASIC_FORMAT = "QQiI"
+	# those last two 'I's are bitfields (3b and 1b, respectively),
+	# so they get packed in a special way.
 
 
 	sizeof = struct.calcsize(BASIC_FORMAT)
@@ -76,8 +75,9 @@ class SpanBlockHeader():
 			self.offset,\
 			self.length,\
 			self.number,\
-			Type,\
-			free = struct.unpack(self.BASIC_FORMAT, raw_data)
+			typeFree = struct.unpack(self.BASIC_FORMAT, raw_data)
+
+			Type, free = typeFree & 0x07, (typeFree & 0x08) == 0x08
 
 			self.Type = utils.CacheType(Type)
 			self.free = bool(free)
