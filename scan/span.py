@@ -60,7 +60,7 @@ class Span():
 				utils.log_exc("Span.__init__:")
 				raise ValueError("Malformed DiskHeader object in cache file '%s'" % (file,))
 
-			for i in range(0, len(spanBlockHeaders), 5):
+			for i in range(0, len(spanBlockHeaders), 4):
 				try:
 					spanblock = stripe.Stripe(spanBlockHeaders[i:i+4], file)
 				except ValueError:
