@@ -85,8 +85,6 @@ class SpanBlockHeader():
 			self.number,\
 			typeFree = raw_data
 
-			self.Type = utils.CacheType(Type)
-
 		self.Type = utils.CacheType(typeFree & 0x07)
 		self.free = (typeFree & 0x08) == 0x08
 
