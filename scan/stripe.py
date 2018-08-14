@@ -63,7 +63,7 @@ class SpanBlockHeader():
 	########################################################
 
 
-	def __init__(self, raw_data: typing.Union[bytes, typing.Tuple[int,int,int,int,int]]):
+	def __init__(self, raw_data: typing.Union[bytes, typing.Tuple[int,int,int,int]]):
 		"""
 		Initializes the header
 

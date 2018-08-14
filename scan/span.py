@@ -62,7 +62,7 @@ class Span():
 
 			for i in range(0, len(spanBlockHeaders), 5):
 				try:
-					spanblock = stripe.Stripe(spanBlockHeaders[i:i+5], file)
+					spanblock = stripe.Stripe(spanBlockHeaders[i:i+4], file)
 				except ValueError:
 					utils.log_exc("Span.__init__: stripe construction:")
 					print("stripe header seems to declare an invalid stripe!", file=sys.stderr)
@@ -87,7 +87,7 @@ class Span():
 		"""
 		Makes the span iterable (which iterates over each block in the span)
 		"""
-		return self.blocks.__iter__()
+		return iter(self.blocks)
 
 	def __getitem__(self, item: int) -> stripe.Stripe:
 		"""
