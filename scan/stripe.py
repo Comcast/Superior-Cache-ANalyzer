@@ -77,21 +77,18 @@ class SpanBlockHeader():
 			self.number,\
 			typeFree = struct.unpack(self.BASIC_FORMAT, raw_data)
 
-			Type, free = typeFree & 0x07, (typeFree & 0x08) == 0x08
-
-			self.Type = utils.CacheType(Type)
-			self.free = bool(free)
 
 		# This assumes that raw_data is a tuple of 5 integers.
 		else:
 			self.offset,\
 			self.length,\
 			self.number,\
-			Type,\
-			self.free = raw_data
+			typeFree = raw_data
 
 			self.Type = utils.CacheType(Type)
 
+		self.Type = utils.CacheType(typeFree & 0x07)
+		self.free = (typeFree & 0x08) == 0x08
 
 		# This currently isn't working (it's off by 2 and idk why)
 		# if self.length % self.VOL_BLOCK_SIZE:
