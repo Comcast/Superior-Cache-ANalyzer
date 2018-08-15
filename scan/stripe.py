@@ -769,7 +769,7 @@ class Stripe():
 
 		# If there's fewer heads than available processes, then we can probably get away
 		# with unthreaded reads.
-		if not numprocs:
+		if not sliceSize:
 			utils.log("Stripe.parallelStoredObjects: Only need to process",
 			          len(heads),
 			          "heads - doing single-process yield.")
