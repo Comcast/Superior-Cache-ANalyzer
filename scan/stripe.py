@@ -766,6 +766,16 @@ class Stripe():
 			heads = heads[(heads[:,2] & 0x3000) ^ 0x2000 == 0]
 
 		sliceSize = len(heads) // numprocs
+
+		# If there's fewer heads than available processes, then we can probably get away
+		# with unthreaded reads.
+		if not numprocs:
+			utils.log("Stripe.parallelStoredObjects: Only need to process",
+			          len(heads),
+			          "heads - doing single-process yield.")
+			yield from self.storedObjects()
+			return
+
 		utils.log("Stripe.parallelStoredObjects: splitting job for",
 		          len(heads),
 		          "heads into",
