@@ -78,7 +78,7 @@ class SpanBlockHeader():
 			typeFree = struct.unpack(self.BASIC_FORMAT, raw_data)
 
 
-		# This assumes that raw_data is a tuple of 5 integers.
+		# This assumes that raw_data is a tuple of 4 integers.
 		else:
 			self.offset,\
 			self.length,\
@@ -147,7 +147,7 @@ class Stripe():
 
 	MAGIC = 0xF1D0F00D
 
-	BASIC_FORMAT = "IhhlQQQIIIIIIII"
+	BASIC_FORMAT = "Ihhl3Q8I"
 
 	sizeof = struct.calcsize(BASIC_FORMAT)
 
@@ -401,27 +401,49 @@ class Stripe():
 
 		with io.open(self.file, 'rb') as infile:
 
-			raw_header = bytearray(self.sizeof)
+			raw_header_A = bytearray(self.sizeof)
 			infile.seek(self.spanBlockHeader.offset)
-			infile.readinto(raw_header)
+			infile.readinto(raw_header_A)
 
-		# Now I need to determine the size of the metadata. Currently, the only way
-		# to know this for sure is to  either seek across the disk, one store block at
-		# a time, or use this iterative approach. I opted for this, because it's cleaner
-		# and in all likelihood faster for non-RAM devices.
-		# This will likely change in cache version 25.0, but until then...
-		self.numBuckets,\
-		self.numSegs,\
-		self.contentOffset = SORdirSize(self.spanBlockHeader.offset, len(self.spanBlockHeader))
+			# Now I need to determine the size of the metadata. Currently, the only way
+			# to know this for sure is to  either seek across the disk, one store block at
+			# a time, or use this iterative approach. I opted for this, because it's cleaner
+			# and in all likelihood faster for non-RAM devices.
+			# This will likely change in cache version 25.0, but until then...
+			self.numBuckets,\
+			self.numSegs,\
+			self.contentOffset = SORdirSize(self.spanBlockHeader.offset, len(self.spanBlockHeader))
 
-		self.directoryOffset= utils.align(self.spanBlockHeader.offset+self.sizeof+2*self.numSegs)
+			self.directoryOffset= utils.align(self.spanBlockHeader.offset+self.sizeof+2*self.numSegs)
 
-		# The SOR method gets me the buckets _per segment_
-		self.numBuckets *= self.numSegs
-		self.numDirEntries = 4 * self.numBuckets
+			# The SOR method gets me the buckets _per segment_
+			self.numBuckets *= self.numSegs
+			self.numDirEntries = 4 * self.numBuckets
 
-		data = struct.unpack(self.BASIC_FORMAT, raw_header)
-		del raw_header
+			# Now we need to check the copy B data to see if it's newer - otherwise what we're
+			# looking at isn't up-to-date.
+			offsetB = utils.align(self.directoryOffset + 10*self.numDirEntries)
+			offsetB += self.sizeof + 2*self.numSegs
+			offsetB = utils.align(offsetB)
+			infile.seek(offsetB)
+			raw_header_B = bytearray(self.sizeof)
+			infile.readinto(raw_header_B)
+
+		A = struct.unpack(self.BASIC_FORMAT, raw_header_A)
+		B = struct.unpack(self.BASIC_FORMAT, raw_header_B)
+
+		del raw_header_A, raw_header_B
+
+		# Whichever metadata copy has a greater sync_serial value is more up-to-date, so if that's
+		# copy B some things need to be updated.
+		if B[10] > A[10]:
+			self.spanBlockHeader.offset = offsetB
+			self.directoryOffset = utils.align(offsetB + self.sizeof+2*self.numSegs)
+			data = B
+			del A
+		else:
+			data = A
+			del B
 
 		magic = data[0]
 		if magic != self.MAGIC:
