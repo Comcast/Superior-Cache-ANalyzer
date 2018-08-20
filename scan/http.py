@@ -671,12 +671,15 @@ def unpackHeap(heap: bytes, offset: int, size: int, http: HTTPHdr) -> \
 			offset = utils.align(offset + newHdrObj.length, utils.POINTER_SIZE)
 		except (struct.error, UnicodeError):
 			utils.log("http.unpackHeap: An error occurred processing -")
-			utils.log("\tnewHdrObj:", newHdrObj)
+			utils.log_exc("http.unpackHeap:")
+			try:
+				utils.log("\tnewHdrObj:", newHdrObj)
+			except NameError:
+				pass
 			utils.log("\toffset:", offset)
 			utils.log("\tsize:", size)
 			utils.log("\thttp:", http)
 			utils.log("\tret:", ret)
-			utils.log_exc("http.unpackHeap:")
 			return ret
 
 	return ret
