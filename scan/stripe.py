@@ -425,12 +425,15 @@ class Stripe():
 			offsetB = utils.align(self.directoryOffset + 10*self.numDirEntries)
 			offsetB += self.sizeof + 2*self.numSegs
 			offsetB = utils.align(offsetB)
+			utils.log("Stripe.read: offset calculated for copy B metadata:", hex(offsetB))
 			infile.seek(offsetB)
 			raw_header_B = bytearray(self.sizeof)
 			infile.readinto(raw_header_B)
 
 		A = struct.unpack(self.BASIC_FORMAT, raw_header_A)
+		utils.log("Stripe.read: raw header for copy A:", A)
 		B = struct.unpack(self.BASIC_FORMAT, raw_header_B)
+		utils.log("Stripe.read: raw header for copy B:", B)
 
 		del raw_header_A, raw_header_B
 
