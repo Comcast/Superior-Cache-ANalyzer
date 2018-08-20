@@ -204,7 +204,13 @@ def parseRecordConfig(contents: str) -> Settings:
 		if line and line.startswith("CONFIG"):
 			utils.log("config.parseRecordConfig: config line:", line)
 
-			name, Type, value = [field for field in line.split(' ')[1:] if field]
+			fields = line.split(' ')[1:]
+
+			if len(fields) < 3:
+				utils.warn("Bad records.config line: '%s'", line)
+				continue
+
+			name, Type, value = fields[0], fields[1], ' '.join(fields [2:])
 
 			if name in ret:
 				utils.log("config.parseRecordConfig: Double-definition of", name)
