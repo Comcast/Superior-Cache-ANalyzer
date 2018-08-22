@@ -412,7 +412,7 @@ class Stripe():
 			# This will likely change in cache version 25.0, but until then...
 			self.numBuckets,\
 			self.numSegs,\
-			self.contentOffset = SORdirSize(self.spanBlockHeader.offset, len(self.spanBlockHeader))
+			self.contentOffset = SORdirSize(self.spanBlockHeader.offset, len(self))
 
 			self.directoryOffset= utils.align(self.spanBlockHeader.offset+self.sizeof+2*self.numSegs)
 
@@ -422,13 +422,13 @@ class Stripe():
 
 			# Now we need to check the copy B data to see if it's newer - otherwise what we're
 			# looking at isn't up-to-date.
-			offsetB = utils.align(self.directoryOffset + 10*self.numDirEntries)
-			offsetB += self.sizeof + 2*self.numSegs
+			offsetB = utils.align(self.directoryOffset + 10*self.numDirEntries) + self.sizeof
 			offsetB = utils.align(offsetB)
 			utils.log("Stripe.read: offset calculated for copy B metadata:", hex(offsetB))
 			infile.seek(offsetB)
 			raw_header_B = bytearray(self.sizeof)
 			infile.readinto(raw_header_B)
+
 
 		A = struct.unpack(self.BASIC_FORMAT, raw_header_A)
 		utils.log("Stripe.read: raw header for copy A:", A)
@@ -842,7 +842,7 @@ def SORdirSize(start: int, length: int) -> typing.Tuple[int, int, int]:
 
 		buckets = (length - content + start) // (4 * avgObjSize)
 
-		segs = -(-4 * buckets // 0xffff)
+		segs = -(-buckets // 0x4000)
 
 		buckets = -(-buckets // segs)
 
