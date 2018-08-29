@@ -438,8 +438,9 @@ class Stripe():
 		del raw_header_A, raw_header_B
 
 		# Whichever metadata copy has a greater sync_serial value is more up-to-date, so if that's
-		# copy B some things need to be updated.
-		if B[10] > A[10]:
+		# copy B some things need to be updated. However, for large stripes there's an error in the
+		# calculations for the offset of B, so we first ensure that it contains a valid magic number.
+		if B[0] == this.MAGIC and B[10] > A[10]:
 			self.spanBlockHeader.offset = offsetB
 			self.directoryOffset = utils.align(offsetB + self.sizeof+2*self.numSegs)
 			data = B
