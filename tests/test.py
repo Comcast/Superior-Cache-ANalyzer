@@ -50,7 +50,14 @@ def testSpan() -> typing.List[str]:
 	if not config.spans():
 		return ["(Span): No spans loaded!"]
 
-	s = config.spans()['storage/cache.db'][1]
+	s = None
+	for k in config.spans().keys():
+		if k.endswith('storage/cache.db'):
+			s = config.spans()[k][1]
+			break
+	if s is None:
+		return ["(Span): Cannot find storage span!"]
+
 
 	# Disk Header tests
 	if s.header.sizeof != DISK_HEADER_SIZE:
