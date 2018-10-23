@@ -704,7 +704,12 @@ class Stripe():
 		try:
 			for d in dirPart:
 				docbuff = bytearray(directory.dirSize(d))
-				fd.seek(self.contentOffset + directory.dirOffset(d))
+				try:
+					fd.seek(self.contentOffset + directory.dirOffset(d))
+				except OSError:
+					utils.log_exc("Stripe.parallelObjs: (was looking at %X)" %\
+					                           self.contentOffset + directory.dirOffset(d))
+					continue
 				fd.readinto(docbuff)
 
 				doc = directory.Doc.from_buffer(docbuff[:ds])
@@ -796,7 +801,7 @@ class Stripe():
 
 		pool = multiprocessing.Pool(processes=numprocs)
 
-		pool.starmap_async(self.parallelObjs, slicedDir, error_callback=print)
+		pool.starmap_async(self.parallelObjs, slicedDir, error_callback=utils.log)
 		pool.close()
 
 		try:
