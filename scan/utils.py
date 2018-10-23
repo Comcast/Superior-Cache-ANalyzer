@@ -83,7 +83,7 @@ def fileSize(fname: str) -> int:
 		log("fileSize: size of", fname, '(', fd, ") is", size)
 		return os.lseek(fd, 0, os.SEEK_END)
 	except OSError as e:
-		print(e, file=sys.stderr)
+		print("fileSize: e", file=sys.stderr)
 		if __debug__:
 			from traceback import print_exc
 			print_exc(file=sys.stderr)
