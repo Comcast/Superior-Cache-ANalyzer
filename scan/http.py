@@ -309,7 +309,7 @@ def unpackHTTPImplHeap(heap: bytes, start: int, http: HTTPHdr) -> typing.List[in
 
 		return obj
 
-	elif polarity == 2:
+	if polarity == 2:
 		# Response header
 		fmt = "Ii4x%ds" % struct.calcsize("PHhP")
 		obj = list(struct.unpack(fmt, heap[start:start+struct.calcsize(fmt)]))

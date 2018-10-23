@@ -166,7 +166,7 @@ def main() -> int:
 		return 0
 
 	# Dump usage of a single span
-	elif args.dump:
+	if args.dump:
 		try:
 			config.init(confDir)
 			return ui.dumpSingleSpan(args.dump)
@@ -187,7 +187,7 @@ def main() -> int:
 		return 0
 
 	# Dump usage breakdown of a single span
-	elif args.dump_breakdown:
+	if args.dump_breakdown:
 		try:
 			config.init(confDir)
 			ui.breakDownDump(args.dump_breakdown)

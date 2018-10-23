@@ -370,12 +370,12 @@ class Stripe():
 			return self.getSegment(indicies)
 
 		# Fetch a single bucket as a tuple of Dirs
-		elif isinstance(indicies, tuple) and all(isinstance(i, int) for i in indicies):
+		if isinstance(indicies, tuple) and all(isinstance(i, int) for i in indicies):
 			if len(indicies) in { 2, 3 }:
 				bucket = self.getBucket(*(indicies[:2]))
 				if len(indicies) == 2:
 					return bucket
-				elif len(indicies) == 3:
+				if len(indicies) == 3:
 					return bucket[indicies[2]]
 
 
@@ -822,18 +822,9 @@ def SORdirSize(start: int, length: int) -> typing.Tuple[int, int, int]:
 	Returns (in order): the bucket count (per segment), the segment count, and
 	the content offset of the stripe with the given starting offset and length.
 	"""
-	#if PYTHON_MAJOR_VERSION < 6
 	from . import config
-	avgObjSize = 8000
 	configuration = config.settings()
-	if 'cache.min_average_object_size' in configuration:
-		avgObjSize = configuration['cache.min_average_object_size']
-	#endif
-	#uncommentif PYTHON_MAJOR_VERSION > 5
-	#avgObjSetting = 'cache.min_average_object_size'
-	#configuration = config.settings()
-	#avgObjSize = 8000 if avgObjSetting not in configuration else configuration[avgObjSetting]
-	#endif
+	avgObjSize = configuration.get("cache.min_average_object_size", 8000)
 
 	def singleStep(buckets: int, segs: int, content: int) -> typing.Tuple[int, int, int]:
 		"""

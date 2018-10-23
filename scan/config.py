@@ -86,9 +86,7 @@ def setLoadAvg(loadavg: str) -> typing.Optional[Loadavg]:
 	utils.log("setLoadAvg: setting to", loadavg)
 
 	# This is broken on Windows
-	#pylint: disable=E1101
 	currentLoadavg = os.getloadavg()
-	#pylint: enable=E1101
 
 	utils.log("setLoadAvg: current loadavg is", currentLoadavg)
 
@@ -120,11 +118,11 @@ def allowedProcesses() -> int:
 
 	# Each process could potentially spend the next 1, 5, or even 10 minutes waiting for disk I/O
 	# or CPU time.
-	#pylint: disable=E1101
 	currentLoadavg = os.getloadavg()
-	#pylint: enable=E1101
 
+	#pylint: disable=E1136
 	maxAllowed = int(min((MAX_LOADAVG[i] - currentLoadavg[i] for i in range(3))))
+	#pylint: enable=E1136
 
 	utils.log("allowedProcesses: maxAllowed is", maxAllowed)
 
@@ -207,7 +205,7 @@ def parseRecordConfig(contents: str) -> Settings:
 			fields = line.split(' ')[1:]
 
 			if len(fields) < 3:
-				utils.warn("Bad records.config line: '%s'", line)
+				utils.log("Bad records.config line: '%s'", line)
 				continue
 
 			name, Type, value = fields[0], fields[1], ' '.join(fields [2:])
