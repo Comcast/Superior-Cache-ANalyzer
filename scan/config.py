@@ -280,11 +280,26 @@ def parseStorageConfig(contents: str) -> typing.Dict[str, Cache]:
 		if cache.startswith('#'):
 			continue
 
-		utils.log("config.parseStorageConfig: storage.config line:", cache)
-
 		# I'm currently ignoring everything except for the cache name, size will be
 		# determined by examining the actual cache file.
 		cache = cache.split(' ')[0]
+
+		utils.log("config.parseStorageConfig: storage.config line:", cache)
+		if not cache.startswith(os.sep):
+			utils.log("config.parseStorageConfig:", cache,
+			          "is a relative path - attempting to find in TS install directory")
+			try:
+				sep = PATH.index('etc')
+			except ValueError:
+				utils.log_exc("config.parseStorageConfig:")
+				try:
+					sep = PATH.index('config')
+				except ValueError:
+					utils.log_exc("config.parseStorageConfig:")
+					raise OSError("Couldn't find cache file specified on storage.config line %d '%s'"\
+					                                                                      % (i, line))
+			cache = os.path.abspath(os.path.join(PATH[:sep], cache))
+
 
 		if os.path.isfile(cache):
 			cache = os.path.abspath(cache)
@@ -298,21 +313,6 @@ def parseStorageConfig(contents: str) -> typing.Dict[str, Cache]:
 
 		# TODO: this doesn't work on Windows, should be checking for an alphabetic character
 		# TODO: followed by `:\` on that system (ideally w/o regex)
-		elif not cache.startswith(os.sep):
-			utils.log("config.parseStorageConfig:", cache,
-			          "is a relative path - attempting to find in TS install directory")
-			try:
-				sep = PATH.index('etc')
-			except ValueError:
-				utils.log_exc("config.parseStorageConfig:")
-				try:
-					sep = PATH.index('config')
-				except ValueError:
-					utils.log_exc("config.parseStorageConfig:")
-					raise OSError("Couldn't find cache file specified on storage.config line %d '%s'"\
-					                                                                      % (i, line))
-			utils.log("config.parseStorageConfig: separator is %r" % sep)
-			cache = os.path.abspath(os.path.join(PATH[:sep], cache))
 		ret[cache] = (utils.fileSize(cache), span.Span(cache))
 
 	return ret
