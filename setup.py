@@ -20,7 +20,7 @@ Setup script for S.C.AN.
 
 import os
 from platform import system
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 from scan import __version__ as scanv
 
 rldep = 'readline'
@@ -32,6 +32,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst')) as f:
 	long_description = f.read()
 
+ext = Extension("_scanlib", sources=["_scanlib/source.c"], language="c")
+
 setup(
 	name="Superior-Cache-ANalyzer",
 	version=scanv,
@@ -40,6 +42,7 @@ setup(
 	url='https://github.com/comcast/Superior-Cache-ANalyzer',
 	author='Brennan Fieck',
 	author_email='Brennan_WilliamFieck@comcast.com',
+	ext_modules=[ext],
 	classifiers=[
 		'Development Status :: 4 - Beta',
 		'Intended Audience :: Telecommunications Industry',
