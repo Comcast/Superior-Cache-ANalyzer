@@ -708,7 +708,7 @@ class Stripe():
 					fd.seek(self.contentOffset + directory.dirOffset(d))
 				except OSError:
 					utils.log_exc("Stripe.parallelObjs: (was looking at %X)" %\
-					                           self.contentOffset + directory.dirOffset(d))
+					                         (self.contentOffset + directory.dirOffset(d)))
 					continue
 				fd.readinto(docbuff)
 
