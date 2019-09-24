@@ -16,9 +16,11 @@
 #include <structmember.h>
 #include <stdbool.h>
 
-// Dunno why this is done, nor why the macro definition isn't included in files that use it
-// #define TSINLINE inline
-// #include "iocore/cache/P_CacheDir.h"
+#define CACHE_BLOCK_SHIFT 9
+#define CACHE_BLOCK_SIZE (1 << CACHE_BLOCK_SHIFT)
+#define SIZEOF_DIR 10
+#define DOC_MAGIC 0x5F129B13
+#define CORRUPT_MAGIC 0xDEADBABE
 
 PyDoc_STRVAR(_scanlib_doc,
 "This module contains Apache TrafficServer data structure bindings to Python objects");
@@ -28,16 +30,15 @@ PyDoc_STRVAR(_scanlib_doc,
 ///    DIR ENTRY    ///
 ///                 ///
 ///////////////////////
-
 typedef struct {
 	PyObject_HEAD
 	off_t length;
 	off_t _raw_offset;
 	off_t offset;
-	bool token;
-	bool pinned;
-	bool head;
-	bool phase;
+	unsigned char token:1;
+	unsigned char pinned:1;
+	unsigned char head:1;
+	unsigned char phase:1;
 	uint16_t tag;
 	uint16_t next;
 } DirEntry;
@@ -55,10 +56,7 @@ static int DirEntry_init(DirEntry* self, PyObject* args, void* unused_kwargs) {
 	}
 
 	uint16_t w[5];
-	size_t wpos = 0;
-	for (void* b = bytes.buf; (b-bytes.buf)/bytes.itemsize < bytes.len; b += sizeof(uint16_t)) {
-		w[wpos] = *((uint16_t*)(b));
-	}
+	memcpy(w, bytes.buf, bytes.len);
 
 	uint16_t big = (w[1]&0xC000) >> 14;
 	uint16_t size = (w[1]&0x3F00) >> 10;
@@ -70,12 +68,11 @@ static int DirEntry_init(DirEntry* self, PyObject* args, void* unused_kwargs) {
 	self->phase = (w[2]&0x1000) == 0x1000;
 	self->tag = w[2]&0x0FFF;
 	self->next = w[3];
-	self->offset = (self->_raw_offset - 1) * 512;
+	self->offset = (self->_raw_offset*CACHE_BLOCK_SIZE) - CACHE_BLOCK_SIZE;
 	return 0;
 }
 
 /// Getters/Setters
-
 static PyObject* DirEntry_getOffset(DirEntry* self, void* closure) {
 	return PyLong_FromUnsignedLongLong((unsigned long long)(self->offset));
 }
@@ -245,6 +242,116 @@ static PyTypeObject DirEntryType = {
 };
 
 
+///////////////////////
+///                 ///
+///       DOC       ///
+///                 ///
+///////////////////////
+typedef struct {
+	uint32_t magic;
+	uint32_t length;
+	uint64_t totalLength;
+	uint64_t keys[4];
+	uint32_t hlen;
+	uint32_t docType:8;
+	uint32_t versionMajor:8;
+	uint32_t versionMinor:8;
+	uint32_t unused:8;
+	uint32_t syncSerial;
+	uint32_t writeSerial;
+	uint32_t pinned;
+	uint32_t checksum;
+} RawDoc;
+
+typedef struct {
+	PyObject_HEAD
+	RawDoc;
+	PyListObject* alternates;
+	Py_buffer data;
+} Doc;
+
+/// Lifecycle hooks
+static PyObject* Doc_new(PyTypeObject* type, PyObject* args, PyObject* kwargs) {
+	Doc* self = (Doc*)type->tp_alloc(type, 0);
+	if (self == NULL) {
+		return NULL;
+	}
+
+	self->alternates = (PyListObject*)PyList_New(0);
+	if (self->alternates == NULL) {
+		Py_DECREF(self);
+		return NULL;
+	}
+
+	return (PyObject*)self;
+}
+
+static int Doc_init(Doc* self, PyObject* args, PyObject* kwargs) {
+	Py_buffer bytes;
+	if (!PyArg_ParseTuple(args, "y*:Doc", &bytes)) {
+		return -1;
+	}
+
+	if (bytes.len != sizeof(RawDoc)) {
+		PyErr_Format(PyExc_TypeError, "Incorrect number of bytes! (got %d, need %d)", bytes.len, sizeof(RawDoc));
+		return -1;
+	}
+
+	memcpy(&(self->RawDoc), bytes.buf, bytes.len);
+	if (self->magic != DOC_MAGIC) {
+		if (self->magic == CORRUPT_MAGIC) {
+			PyErr_FromString(PyExc_ValueError, "Doc is corrupt");
+		} else {
+			PyErr_Format(PyExc_ValueError, "Doc magic number 0x%x does not match expected DOC_MAGIC", self->magic);
+		}
+		return -1;
+	}
+
+	return 0;
+}
+
+static int Doc_dealloc(Doc* self) {
+	Py_XDECREF(self->alternates);
+	PyBuffer_Release(&(self->data));
+	Py_TYPE(self)->tp_free((PyObject*)self);
+	return 0;
+}
+
+/// Getters/Setters
+static PyObject* Doc_getAlternates(Doc* self, void* closure) {
+	Py_INCREF(self->alternates);
+	return self->alternates;
+}
+
+/// Object Definition
+static PyTypeObject DocType = {
+	PyVarObject_HEAD_INIT(NULL, 0)
+	.tp_name="Doc",
+	.tp_doc="A single entry within a directory.\n\n"
+	        "This structure is comparable to a ``Doc`` structure in the ATS source code. Each part,\n"
+	        "or 'fragment' of an object is preceded on the cache by header data in this format.",
+	.tp_basicsize = sizeof(Doc),
+	.tp_itemsize = 0,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = Doc_new,
+	.tp_init = (initproc) Doc_init,
+	.tp_dealloc = (destructor) Doc_dealloc,
+	//.tp_getset = DirEntry_getsetters,
+	//.tp_as_sequence = &DirEntry_as_sequence,
+	//.tp_as_number = &DirEntry_as_number,
+	//.tp_repr = DirEntry_repr,
+	//.tp_str = DirEntry_str,
+	//.tp_methods = DirEntry_methods,
+};
+
+
+////////////////////////
+///                  ///
+///      MODULE      ///
+///                  ///
+////////////////////////
+
+
 static struct PyModuleDef _scanlib_module = {
 	PyModuleDef_HEAD_INIT,
 	.m_name="_scanlib",
@@ -269,6 +376,12 @@ PyMODINIT_FUNC PyInit__scanlib(void) {
 		Py_DECREF(m);
 		return NULL;
 	}
+
+	PyModule_AddIntConstant(m, "CACHE_BLOCK_SIZE", CACHE_BLOCK_SIZE);
+	PyModule_AddIntConstant(m, "CACHE_BLOCK_SHIFT", CACHE_BLOCK_SHIFT);
+	PyModule_AddIntConstant(m, "SIZEOF_DIR", SIZEOF_DIR);
+	PyModule_AddIntConstant(m, "DOC_MAGIC", DOC_MAGIC);
+	PyModule_AddIntConstant(m, "CORRUPT_MAGIC", CORRUPT_MAGIC);
 
 	return m;
 }
