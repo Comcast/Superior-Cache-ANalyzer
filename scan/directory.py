@@ -33,6 +33,7 @@ def dirOffset(d: typing.List[int]) -> int:
 	Returns the actual file-relative offset of the content pointed at
 	by the tuple of uint16_ts `d` that represents the DirEntry in question
 	"""
+	d = [int(D) for D in d]
 	offset = d[0] + ((d[1] & 0xFF) << 16) + (d[4] << 24)
 	return (offset - 1) * 0x200
 
@@ -41,6 +42,7 @@ def dirSize(d: typing.List[int]) -> int:
 	Returns the approximate size of the object to which the DirEntry
 	represented by the list of uint16_ts `d` points.
 	"""
+	d = [int(D) for D in d]
 	big, size = (d[1] & 0xC000) >> 14, (d[1] & 0x3F00) >> 10
 	return (size + 1) * (1 << (9 + 3*big))
 
